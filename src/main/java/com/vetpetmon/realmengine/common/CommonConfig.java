@@ -13,7 +13,7 @@ public class CommonConfig {
         LINEAR
     }
     public static ForgeConfigSpec.EnumValue<ScalingMode> scalingMode;
-    public static ForgeConfigSpec.BooleanValue disableNetherPortal, disableEndPortal, weeklyScheduleEnabled;
+    public static ForgeConfigSpec.BooleanValue disableNetherPortal, disableEndPortal, tieringEnabled;
 
     public CommonConfig(ForgeConfigSpec.Builder builder) {
         // DAM stopped working for us, so we wrote our own dimensional access system.
@@ -27,6 +27,9 @@ public class CommonConfig {
         builder.pop();
 
         builder.push("Tiered Mobs");
+        tieringEnabled = builder
+                .comment("Enable tiered mob scaling based on distance from world spawn. Default is true.")
+                .define("tieringEnabled", true);
         noTieringZoneRadius = builder
             .comment("Distance before tiering starts, to make starting areas far less dangerous. Default is 500.")
             .defineInRange("noTieringZoneRadius", 500, 1, 1000);

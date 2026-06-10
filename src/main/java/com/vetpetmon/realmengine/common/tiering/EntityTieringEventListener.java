@@ -1,5 +1,6 @@
 package com.vetpetmon.realmengine.common.tiering;
 
+import com.vetpetmon.realmengine.common.CommonConfig;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -22,7 +23,7 @@ public class EntityTieringEventListener {
      */
     @SubscribeEvent
     public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
-        if (!(event.getEntity() instanceof LivingEntity entity)) {
+        if (!(event.getEntity() instanceof LivingEntity entity) || !CommonConfig.tieringEnabled.get()) {
             return;
         }
 
