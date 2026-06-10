@@ -1,0 +1,9 @@
+{
+    "pack": {
+        "name": "RealmEngine",
+        "id": "realmengine",
+        "pack_format": 15,
+        "version": "3.0",
+        "description": "The core library of Realmfall"
+    }
+}

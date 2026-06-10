@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "priority": 9,
+  "refmap": "realmengine.refmap.json",
+  "package": "com.vetpetmon.realmengine.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "minVersion": "0.8",
+  "mixins": [
+    "MixinPersistentEntitySectionManager",
+    "ModelPartAccessor",
+    "MusicManagerAccessor",
+    "RandomizedItemMixin",
+    "ServerLevelAccessor",
+    "server.BlockEndPortal",
+    "server.BlockNetherPortal"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "client.ContainerScreenRightClickMixin"
+  ]
+}
