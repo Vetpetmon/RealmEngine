@@ -320,6 +320,16 @@ public interface IRandomizedGear {
         tooltipList.add(Component.empty());
 
         for (RealmEngineAttributeMod mod : getAttributeMods(stack, world)) {
+            // Defensive: some mods may be lazy-resolved and not have an Attribute available on the client.
+            // Skip tooltip lines for mods with no resolved attribute to avoid NPEs in tooltip rendering.
+            if (mod.getAttribute() == null) {
+                // Try to show a sensible fallback: use registry name or modifier name if available
+                String attrName = mod.getAttributeRegistryName() != null ? mod.getAttributeRegistryName() : mod.getModiName();
+                String display = attrName != null ? attrName : "unknown";
+                tooltipList.add(Component.literal(display).withStyle(ChatFormatting.BLUE));
+                continue;
+            }
+
             double amount = mod.getAmount();
 
             if (mod.getOperation() == AttributeModifier.Operation.ADDITION) {

@@ -8,7 +8,6 @@
   "mixins": [
     "MixinPersistentEntitySectionManager",
     "ModelPartAccessor",
-    "MusicManagerAccessor",
     "RandomizedItemMixin",
     "ServerLevelAccessor",
     "server.BlockEndPortal",

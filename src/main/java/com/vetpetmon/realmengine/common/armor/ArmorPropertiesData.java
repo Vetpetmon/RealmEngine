@@ -1,5 +1,6 @@
 package com.vetpetmon.realmengine.common.armor;
 
+import com.vetpetmon.realmengine.common.attribute.IRandomizedGear;
 import com.vetpetmon.realmengine.common.attribute.RealmEngineAttributeMod;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -295,6 +296,59 @@ public class ArmorPropertiesData {
     private static UUID deriveGearModifierUUID(ItemStack stack, String attrKey) {
         String base = "gear_mod|" + stack.getItem().getDescriptionId() + "|" + attrKey;
         return UUID.nameUUIDFromBytes(base.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @SubscribeEvent
+    public void gearAttributeMods(ItemAttributeModifierEvent event) {
+
+        ItemStack stack = event.getItemStack();
+
+        if (stack.getItem() instanceof IRandomizedGear gear) {
+            EquipmentSlot slot = event.getSlotType();
+
+            // If item is ArmorItem, only apply when slot matches armor slot (slot must be non-null)
+            if (stack.getItem() instanceof ArmorItem armorItem) {
+                if (slot != null && slot == armorItem.getEquipmentSlot()) {
+                    for (RealmEngineAttributeMod mod : gear.readModsFromStack(stack)) {
+                        // Defensive: some mods may be defined by name only and not yet resolve to an Attribute on the client.
+                        if (mod.getAttribute() == null) continue;
+                        UUID derived = IRandomizedGear.deriveInstanceUUID(mod, stack, slot);
+                        String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, slot);
+                        event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
+                    }
+                    for (RealmEngineAttributeMod mod : gear.readArmorModsForArmorItem(armorItem, stack)) {
+                        if (mod.getAttribute() == null) continue;
+                        UUID derived = IRandomizedGear.deriveInstanceUUID(mod, stack, slot);
+                        String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, slot);
+                        event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
+                    }
+                }
+            } else {
+                // Non-armor IRandomizedGear: if the item reports itself as a Curio, treat as curio (apply ONLY when actually equipped as a curio)
+                if (gear.isCurio()) {
+                    // Only apply curio modifiers when the event slot is null (curio context). This prevents modifiers
+                    // from being shown/applied for every equipment slot in inventory/tooltips.
+                    if (event.getSlotType() != null) return;
+
+                    for (RealmEngineAttributeMod mod : gear.readModsFromStack(stack)) {
+                        if (mod.getAttribute() == null) continue;
+                        UUID derived = IRandomizedGear.deriveInstanceUUID(mod, stack, null);
+                        String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, null);
+                        event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
+                    }
+                } else {
+                    // fallback: use provided slot (slot must be non-null)
+                    if (slot != null && slot == gear.getGearEquipmentSlot())
+                        for (RealmEngineAttributeMod mod : gear.readModsFromStack(stack)) {
+                            if (mod.getAttribute() == null) continue;
+                            UUID derived = IRandomizedGear.deriveInstanceUUID(mod, stack, slot);
+                            String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, slot);
+                            event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
+                        }
+                }
+            }
+
+        }
     }
 
     // Subscriber to apply armor attribute mods to players
