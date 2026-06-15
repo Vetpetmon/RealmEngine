@@ -70,7 +70,7 @@ public class RealmEngine {
     }
     public static final SimpleChannel PACKET_HANDLER = NetworkRegistry.newSimpleChannel(createRL(MODID), () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
 
-    public static final GameRules.Key<GameRules.BooleanValue> TNT_BREAKS_BLOCKS = GameRules.register("tntBreaksBlocks", GameRules.Category.MISC, GameRules.BooleanValue.create(true));
+//    public static final GameRules.Key<GameRules.BooleanValue> TNT_BREAKS_BLOCKS = GameRules.register("tntBreaksBlocks", GameRules.Category.MISC, GameRules.BooleanValue.create(true));
 
     @SuppressWarnings("removal")
     public RealmEngine(FMLJavaModLoadingContext context)
