@@ -1,5 +1,6 @@
 package com.vetpetmon.realmengine;
 
+import com.llamalad7.mixinextras.MixinExtrasBootstrap;
 import com.mojang.logging.LogUtils;
 import com.vetpetmon.realmengine.client.ClientProxy;
 import com.vetpetmon.realmengine.common.CommonConfig;
@@ -19,6 +20,7 @@ import com.vetpetmon.realmengine.common.networking.SyncModsetsPacket;
 import com.vetpetmon.realmengine.common.tiering.loot.LootConditions;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.GameRules;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
@@ -68,10 +70,12 @@ public class RealmEngine {
     }
     public static final SimpleChannel PACKET_HANDLER = NetworkRegistry.newSimpleChannel(createRL(MODID), () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
 
+    public static final GameRules.Key<GameRules.BooleanValue> TNT_BREAKS_BLOCKS = GameRules.register("tntBreaksBlocks", GameRules.Category.MISC, GameRules.BooleanValue.create(true));
 
     @SuppressWarnings("removal")
     public RealmEngine(FMLJavaModLoadingContext context)
     {
+        MixinExtrasBootstrap.init();
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, serverConfigSpec, "realmengine-common.toml");
 
         IEventBus modEventBus = context.getModEventBus();
