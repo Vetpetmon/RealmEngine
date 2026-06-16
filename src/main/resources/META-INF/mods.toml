@@ -17,7 +17,7 @@ license="GNU GPLv3"
 # The modid of the mod
 modId="realmengine" #mandatory
 # The version number of the mod
-version="3.1" #mandatory
+version="3.1.6" #mandatory
 # A display name for the mod
 displayName="RealmEngine" #mandatory
 # A URL to query for updates for this mod. See the JSON update specification https://docs.minecraftforge.net/en/latest/misc/updatechecker/
@@ -89,9 +89,9 @@ side = "BOTH"
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
 # stop your mod loading on the server for example.
-#[features.bisccel]
+#[features.realmengine]
 #openGLVersion="[3.2,)"
-#[[mixins]]
-#    config = "mixins.bisccel.json"
-#    required = true
-#    side = "BOTH"
+[[mixins]]
+    config = "mixins.realmengine.json"
+    required = true
+    side = "BOTH"

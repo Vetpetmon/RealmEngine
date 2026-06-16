@@ -9,7 +9,6 @@
     "MixinPersistentEntitySectionManager",
     "ModelPartAccessor",
     "RandomizedItemMixin",
-    "ServerLevelAccessor",
     "server.BlockEndPortal",
     "server.BlockNetherPortal"
   ],
