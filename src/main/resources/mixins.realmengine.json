@@ -6,6 +6,7 @@
   "compatibilityLevel": "JAVA_17",
   "minVersion": "0.8",
   "mixins": [
+    "AbstractContainerScreenAccessor",
     "MixinPersistentEntitySectionManager",
     "ModelPartAccessor",
     "RandomizedItemMixin",

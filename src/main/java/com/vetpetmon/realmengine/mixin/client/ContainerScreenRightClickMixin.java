@@ -3,6 +3,7 @@ package com.vetpetmon.realmengine.mixin.client;
 import com.vetpetmon.realmengine.RealmEngine;
 import com.vetpetmon.realmengine.common.armor.ItemApplicableArmorMod;
 import com.vetpetmon.realmengine.common.networking.ApplyArmorModToSlotPacket;
+import com.vetpetmon.realmengine.mixin.AbstractContainerScreenAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.Slot;
@@ -26,16 +27,8 @@ public class ContainerScreenRightClickMixin {
         if (mc.player == null) return;
         if (!(mc.screen instanceof AbstractContainerScreen<?> screen)) return;
 
-        // Use reflection to access protected fields leftPos and topPos
-        int left = 0, top = 0;
-        try {
-            Field leftField = AbstractContainerScreen.class.getDeclaredField("leftPos");
-            Field topField = AbstractContainerScreen.class.getDeclaredField("topPos");
-            leftField.setAccessible(true);
-            topField.setAccessible(true);
-            left = leftField.getInt(screen);
-            top = topField.getInt(screen);
-        } catch (Exception ignored) {}
+        int left = ((AbstractContainerScreenAccessor) screen).getLeftPos();
+        int top =  ((AbstractContainerScreenAccessor) screen).getTopPos();
 
         // Find slot under mouse by iterating slots and checking bounds
         Slot found = null;
