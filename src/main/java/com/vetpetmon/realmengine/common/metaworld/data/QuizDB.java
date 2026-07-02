@@ -10,15 +10,16 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraft.core.HolderLookup;
 
 @SuppressWarnings("unused") // This is a LIBRARY, we will use these later.
 public class QuizDB extends SavedData {
@@ -33,7 +34,7 @@ public class QuizDB extends SavedData {
 
     public static QuizDB get(LevelAccessor world) {
         if (world instanceof ServerLevel level)
-            return level.getDataStorage().computeIfAbsent(QuizDB::load, QuizDB::new, DB_FILENAME);
+            return level.getDataStorage().computeIfAbsent(new SavedData.Factory<>(QuizDB::new, QuizDB::load), DB_FILENAME);
         else return client;
     }
 
@@ -105,8 +106,7 @@ public class QuizDB extends SavedData {
     public static void sync(ServerPlayer player) {
         SavedData worlddata = QuizDB.get(player.level());
         if (worlddata != null)
-            RealmEngine.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),
-                    new MessageSyncQuestionDB(QuizDB
+            PacketDistributor.sendToPlayer(player, new MessageSyncQuestionDB(QuizDB
                             .get(player.level()).save(new CompoundTag())));
     }
 
@@ -207,7 +207,7 @@ public class QuizDB extends SavedData {
         return issuesFound == 0;
     }
 
-    public static QuizDB load(CompoundTag tag) {
+    public static QuizDB load(CompoundTag tag, HolderLookup.Provider registries) {
         // Clear data before loading
         questions.clear();
         QuizDB data = new QuizDB();
@@ -270,12 +270,11 @@ public class QuizDB extends SavedData {
             buf.writeNbt(msg.data);
         }
 
-        public static void handle(MessageSyncQuestionDB msg, Supplier<NetworkEvent.Context> ctx) {
-            ctx.get().enqueueWork(() -> {
+        public static void handle(MessageSyncQuestionDB msg, IPayloadContext ctx) {
+            ctx.enqueueWork(() -> {
                 if (ctx.get().getDirection().getReceptionSide().isClient()) QuizDB.client = QuizDB.load(msg.data);
             });
-            ctx.get().setPacketHandled(true);
-        }
+}
     }
 }
 

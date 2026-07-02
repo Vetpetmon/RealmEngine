@@ -1,13 +1,16 @@
 package com.vetpetmon.realmengine.common.attribute;
 
+import com.vetpetmon.realmengine.RealmEngine;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.UUID;
 import java.util.function.Supplier;
+import net.minecraft.core.Holder;
+
 
 @SuppressWarnings("unused")
 public abstract class RealmEngineAttributeMod {
@@ -16,15 +19,15 @@ public abstract class RealmEngineAttributeMod {
     private final String modiName;
     private final AttributeModifier.Operation operation;
 
-    public RealmEngineAttributeMod(Attribute attribute, UUID modifierId, String modifierName) {
-        this.attribute = attribute;
+    public RealmEngineAttributeMod(Holder<Attribute> attribute, UUID modifierId, String modifierName) {
+        this.attribute = attribute.value();
         this.modiId = modifierId;
         this.modiName = modifierName;
-        this.operation = AttributeModifier.Operation.ADDITION;
+        this.operation = AttributeModifier.Operation.ADD_VALUE;
     }
 
-    public RealmEngineAttributeMod(Attribute attribute, UUID modifierId, String modifierName, AttributeModifier.Operation operation) {
-        this.attribute = attribute;
+    public RealmEngineAttributeMod(Holder<Attribute> attribute, UUID modifierId, String modifierName, AttributeModifier.Operation operation) {
+        this.attribute = attribute.value();
         this.modiId = modifierId;
         this.modiName = modifierName;
         this.operation = operation;
@@ -34,7 +37,7 @@ public abstract class RealmEngineAttributeMod {
      * Create the AttributeModifier instance
      * @return AttributeModifier
      */
-    public AttributeModifier createModifier() {return new AttributeModifier(modiId, modiName, getAmount(), operation);}
+    public AttributeModifier createModifier() {return new AttributeModifier(ResourceLocation.fromNamespaceAndPath(RealmEngine.MODID, modiName), getAmount(), operation);}
 
     /**
      * Get the attribute this modifier modifies
@@ -50,7 +53,7 @@ public abstract class RealmEngineAttributeMod {
         try {
             ResourceLocation rl = ResourceLocation.tryParse(attributeString);
             if (rl == null) return null;
-            return ForgeRegistries.ATTRIBUTES.getValue(rl);
+            return BuiltInRegistries.ATTRIBUTE.get(rl);
         } catch (Exception ex) {
             // Be defensive: on any parsing/lookup error, return null rather than throwing
             return null;
@@ -94,7 +97,7 @@ public abstract class RealmEngineAttributeMod {
      * @param amount Supplier<Double>
      * @return RealmfallAttributeMod
      */
-    public static RealmEngineAttributeMod createFixedMod(Attribute attribute, Supplier<UUID> modifierId, Supplier<String> modifierName, Supplier<Double> amount) {
+    public static RealmEngineAttributeMod createFixedMod(Holder<Attribute> attribute, Supplier<UUID> modifierId, Supplier<String> modifierName, Supplier<Double> amount) {
         return new RealmEngineAttributeMod(attribute, modifierId.get(), modifierName.get()) {
             public double getAmount() {
                 return amount.get();
@@ -126,8 +129,8 @@ public abstract class RealmEngineAttributeMod {
      * @param amount Supplier<Double>
      * @return RealmfallAttributeMod
      */
-    public static RealmEngineAttributeMod createMultiplierMod(Attribute attribute, Supplier<UUID> modifierId, Supplier<String> modifierName, Supplier<Double> amount) {
-        return new RealmEngineAttributeMod(attribute, modifierId.get(), modifierName.get(), AttributeModifier.Operation.MULTIPLY_BASE) {
+    public static RealmEngineAttributeMod createMultiplierMod(Holder<Attribute> attribute, Supplier<UUID> modifierId, Supplier<String> modifierName, Supplier<Double> amount) {
+        return new RealmEngineAttributeMod(attribute, modifierId.get(), modifierName.get(), AttributeModifier.Operation.ADD_MULTIPLIED_BASE) {
             public double getAmount() {
                 return amount.get();
             }
@@ -136,7 +139,7 @@ public abstract class RealmEngineAttributeMod {
 
     /** Create multiplier mod by attribute registry name; resolves Attribute lazily. */
     public static RealmEngineAttributeMod createMultiplierModByAttributeName(String attributeRegistryName, Supplier<UUID> modifierId, Supplier<String> modifierName, Supplier<Double> amount) {
-        return new RealmEngineAttributeMod(null, modifierId.get(), modifierName.get(), AttributeModifier.Operation.MULTIPLY_BASE) {
+        return new RealmEngineAttributeMod(null, modifierId.get(), modifierName.get(), AttributeModifier.Operation.ADD_MULTIPLIED_BASE) {
              public double getAmount() { return amount.get(); }
              public Attribute getAttribute() { return RealmEngineAttributeMod.getAttributeFromString(attributeRegistryName); }
              public String getAttributeRegistryName() { return attributeRegistryName; }
@@ -151,15 +154,15 @@ public abstract class RealmEngineAttributeMod {
      * @param amount Supplier<Double>
      * @return RealmfallAttributeMod
      */
-    public static RealmEngineAttributeMod createTotalMultiplierMod(Attribute attribute, Supplier<UUID> modifierId, Supplier<String> modifierName, Supplier<Double> amount) {
-        return new RealmEngineAttributeMod(attribute, modifierId.get(), modifierName.get(), AttributeModifier.Operation.MULTIPLY_TOTAL) {
+    public static RealmEngineAttributeMod createTotalMultiplierMod(Holder<Attribute> attribute, Supplier<UUID> modifierId, Supplier<String> modifierName, Supplier<Double> amount) {
+        return new RealmEngineAttributeMod(attribute, modifierId.get(), modifierName.get(), AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL) {
             public double getAmount() {return amount.get();}
         };
     }
 
     /** Create total multiplier mod by attribute registry name; resolves Attribute lazily. */
     public static RealmEngineAttributeMod createTotalMultiplierModByAttributeName(String attributeRegistryName, Supplier<UUID> modifierId, Supplier<String> modifierName, Supplier<Double> amount) {
-        return new RealmEngineAttributeMod(null, modifierId.get(), modifierName.get(), AttributeModifier.Operation.MULTIPLY_TOTAL) {
+        return new RealmEngineAttributeMod(null, modifierId.get(), modifierName.get(), AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL) {
              public double getAmount() { return amount.get(); }
              public Attribute getAttribute() { return RealmEngineAttributeMod.getAttributeFromString(attributeRegistryName); }
              public String getAttributeRegistryName() { return attributeRegistryName; }

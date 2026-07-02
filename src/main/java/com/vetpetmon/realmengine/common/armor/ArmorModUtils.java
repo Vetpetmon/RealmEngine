@@ -6,7 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ public class ArmorModUtils {
         }
 
         // If legacy data empty, try datapack-driven marker stored under modifiers -> mod_item_id
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         if (tag != null && tag.contains("modifiers")) {
             CompoundTag modsTag = tag.getCompound("modifiers");
             if (modsTag.contains("mod_item_id")) {
@@ -36,7 +36,7 @@ public class ArmorModUtils {
                     // Attempt to locate the registered Item for this mod id
                     ResourceLocation rl = ResourceLocation.tryParse(modId);
                     if (rl != null) {
-                        Item modItem = ForgeRegistries.ITEMS.getValue(rl);
+                        Item modItem = BuiltInRegistries.ITEM.get(rl);
                         if (modItem instanceof ItemApplicableArmorMod iam) {
                             // If the mod item was registered with an ArmorModPiece, use that
                             ArmorModPiece legacyPiece = iam.getArmorModPiece();
@@ -61,7 +61,7 @@ public class ArmorModUtils {
      */
     public static void applyArmorModsToStack(ItemStack stack, ArmorItem armorItem) {
         List<ArmorModPiece> pieces = readArmorModsForArmorItem(armorItem, stack);
-        CompoundTag tag = stack.getOrCreateTag();
+        CompoundTag tag = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
 
         // Create armor_mods tag (separate from gear_mods)
         CompoundTag armorMods = new CompoundTag();
@@ -119,7 +119,7 @@ public class ArmorModUtils {
      * @return true if found, false otherwise
      */
     public static boolean hasArmorModByName(ItemStack stack, String modName) {
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         if (tag != null && tag.contains("modifiers")) {
             CompoundTag modsTag = tag.getCompound("modifiers");
             if (modsTag.contains("mod_name")) {
@@ -131,7 +131,7 @@ public class ArmorModUtils {
                 String modId = modsTag.getString("mod_item_id");
                 ResourceLocation rl = ResourceLocation.tryParse(modId);
                 if (rl != null) {
-                    Item item = ForgeRegistries.ITEMS.getValue(rl);
+                    Item item = BuiltInRegistries.ITEM.get(rl);
                     if (item instanceof ItemApplicableArmorMod iam) {
                         ArmorModPiece ap = iam.getArmorModPiece();
                         if (ap != null && ap.mod() != null) return ap.mod().getModiName().equals(modName);
@@ -194,7 +194,7 @@ public class ArmorModUtils {
                 // Direct instance match
                 if (ai == targetArmor) return true;
                 // Registry key match
-                ResourceLocation k1 = ForgeRegistries.ITEMS.getKey(ai), k2 = ForgeRegistries.ITEMS.getKey(targetArmor);
+                ResourceLocation k1 = BuiltInRegistries.ITEM.getKey(ai), k2 = BuiltInRegistries.ITEM.getKey(targetArmor);
                 if (k1 != null && k1.equals(k2)) return true;
                 // Description ID match (important for modded armor)
                 if (ai.getDescriptionId().equals(targetArmor.getDescriptionId())) return true;

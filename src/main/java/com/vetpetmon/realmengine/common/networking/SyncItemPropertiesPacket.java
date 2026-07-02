@@ -5,8 +5,8 @@ import com.vetpetmon.realmengine.common.item.ItemPropertiesData;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.neoforged.neoforge.network.NetworkEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * Packet to sync item properties data from server to client.
@@ -76,7 +77,7 @@ public class SyncItemPropertiesPacket {
         return new SyncItemPropertiesPacket(buf);
     }
 
-    public static void handle(SyncItemPropertiesPacket pkt, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handle(SyncItemPropertiesPacket pkt, IPayloadContext ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.enqueueWork(() -> {
             if (ctx.getDirection().getReceptionSide().isClient()) {
@@ -156,7 +157,7 @@ public class SyncItemPropertiesPacket {
             buf.writeInt(itemEntries.size());
             for (SerializedItemEntry entry : itemEntries) {
                 buf.writeResourceLocation(entry.itemId);
-                buf.writeUtf(entry.modsetId != null ? entry.modsetId : "");
+                buf.writeUtf(entry.modsetId() != null ? entry.modsetId() : "");
             }
         }
 
@@ -173,7 +174,7 @@ public class SyncItemPropertiesPacket {
             props.itemEntries = new ArrayList<>();
             for (SerializedItemEntry entry : itemEntries) {
                 Item item = BuiltInRegistries.ITEM.get(entry.itemId);
-                if (item != null) props.itemEntries.add(new ItemPropertiesData.ItemEntry(item, entry.modsetId));
+                if (item != null) props.itemEntries.add(new ItemPropertiesData.ItemEntry(item, entry.modsetId()));
             }
 
             return props;
@@ -190,3 +191,4 @@ public class SyncItemPropertiesPacket {
         }
     }
 }
+

@@ -3,10 +3,11 @@ package com.vetpetmon.realmengine.common;
 import com.vetpetmon.realmengine.RealmEngine;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
-@Mod.EventBusSubscriber(modid = RealmEngine.MODID)
+@EventBusSubscriber(modid = RealmEngine.MODID)
 public class WindController {
     private static final Direction[] directions = {Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST};
     private static int currentStrength = 1;
@@ -45,8 +46,8 @@ public class WindController {
 
     // Subscribe to server ticks and randomly change wind every 6000 ticks (5 minutes)
     @SubscribeEvent
-    public static void onWorldTick(TickEvent.LevelTickEvent event) {
-        if (!event.level.isClientSide() && event.phase == TickEvent.Phase.END)
-            if (event.level.getGameTime() % 6000 == 0) randomizeWind(event.level.getRandom());
+    public static void onWorldTick(LevelTickEvent.Post event) {
+        if (!event.getLevel().isClientSide())
+            if (event.getLevel().getGameTime() % 6000 == 0) randomizeWind(event.getLevel().getRandom());
     }
 }

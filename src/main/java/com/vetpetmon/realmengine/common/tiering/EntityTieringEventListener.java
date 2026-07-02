@@ -7,14 +7,14 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 /**
  * Automatic entity scaling listener that applies tiering to any LivingEntity
  * that doesn't already implement ScaledStatsMob.
  * This listener uses values from CommonConfig to determine tier and apply scaling.
  */
-@Mod.EventBusSubscriber(modid = "realmengine", bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = "realmengine")
 public class EntityTieringEventListener {
 
     /**

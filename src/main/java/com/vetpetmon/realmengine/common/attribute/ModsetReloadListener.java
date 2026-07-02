@@ -10,6 +10,8 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -178,10 +180,7 @@ public class ModsetReloadListener extends SimpleJsonResourceReloadListener {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server != null) {
             for (ServerPlayer player : server.getPlayerList().getPlayers())
-                RealmEngine.PACKET_HANDLER.send(
-                    PacketDistributor.PLAYER.with(() -> player),
-                    new SyncModsetsPacket(ModsetData.MODSETS)
-                );
+                PacketDistributor.sendToPlayer(player, new SyncModsetsPacket(ModsetData.MODSETS));
             RealmEngine.LOGGER.info("Synced modsets to {} connected players", server.getPlayerList().getPlayerCount());
         }
     }

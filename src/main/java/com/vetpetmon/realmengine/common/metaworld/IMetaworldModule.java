@@ -1,6 +1,5 @@
 package com.vetpetmon.realmengine.common.metaworld;
 
-
 import net.neoforged.bus.api.Event;
 
 /**

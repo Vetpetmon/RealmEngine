@@ -13,9 +13,10 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -72,7 +73,7 @@ public class ArmorPropertiesReloadListener extends SimpleJsonResourceReloadListe
                         if (itemId != null) {
                             ResourceLocation itemRl = ResourceLocation.tryParse(itemId);
                             if (itemRl != null) {
-                                Item item = ForgeRegistries.ITEMS.getValue(itemRl);
+                                Item item = BuiltInRegistries.ITEM.get(itemRl);
                                 if (item != null) {
                                     armorItems.add(item);
                                     armorItemEntries.add(new ArmorPropertiesData.ArmorItemEntry(item, modsetId));
@@ -143,7 +144,7 @@ public class ArmorPropertiesReloadListener extends SimpleJsonResourceReloadListe
                             ResourceLocation modRl = ResourceLocation.tryParse(modId);
                             Item item = null;
                             if (modRl != null) {
-                                item = ForgeRegistries.ITEMS.getValue(modRl);
+                                item = BuiltInRegistries.ITEM.get(modRl);
                                 if (item == null && !modOptional && !optional) RealmEngine.LOGGER.error("ArmorProperties: unknown mod item '{}' in {}", modId, rl);
                             }
                             // Build applicableItems: if slots are provided, we'll filter armorItems by EquipmentSlot
@@ -275,10 +276,7 @@ public class ArmorPropertiesReloadListener extends SimpleJsonResourceReloadListe
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server != null) {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                RealmEngine.PACKET_HANDLER.send(
-                    PacketDistributor.PLAYER.with(() -> player),
-                    new SyncArmorPropertiesPacket(ARMOR_PROPERTIES)
-                );
+                PacketDistributor.sendToPlayer(player, new SyncArmorPropertiesPacket(ARMOR_PROPERTIES));
             }
             RealmEngine.LOGGER.info("Synced armor properties to {} connected players", server.getPlayerList().getPlayerCount());
         }

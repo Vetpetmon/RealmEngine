@@ -1,6 +1,6 @@
 package com.vetpetmon.realmengine.common.metaworld;
 
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.bus.api.Event;
 
 /**
  * Subscribed event to run on every tick of the metaworld.

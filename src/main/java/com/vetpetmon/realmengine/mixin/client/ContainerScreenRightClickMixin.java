@@ -7,15 +7,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.lang.reflect.Field;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 @Mixin(AbstractContainerScreen.class)
 public class ContainerScreenRightClickMixin {
@@ -61,7 +61,7 @@ public class ContainerScreenRightClickMixin {
         if (key != null) modItemId = key.toString();
 
         // Send packet to server to apply this mod to the clicked slot
-        RealmEngine.PACKET_HANDLER.sendToServer(new ApplyArmorModToSlotPacket(found.index, modItemId));
+        PacketDistributor.sendToServer(new ApplyArmorModToSlotPacket(found.index, modItemId));
 
         // Consume the click locally to prevent default behavior
         cir.setReturnValue(true);

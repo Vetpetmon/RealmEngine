@@ -2,6 +2,7 @@ package com.vetpetmon.realmengine.common.tiering;
 
 import com.vetpetmon.realmengine.common.CommonConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
@@ -66,7 +67,7 @@ public class SpawnUtils {
     public static void scalePrimarySkillByTier(LivingEntity entity, int tier, double basePrimarySkill) {
         Attribute attr = TieringRegistry.getPrimarySkillStrengthAttribute();
         if (attr != null) {
-            Objects.requireNonNull(entity.getAttribute(attr)).setBaseValue(basePrimarySkill * SpawnUtils.tierMultiplier(tier));
+            Objects.requireNonNull(entity.getAttribute((Holder<Attribute>) attr)).setBaseValue(basePrimarySkill * SpawnUtils.tierMultiplier(tier));
         }
     }
 
@@ -74,7 +75,7 @@ public class SpawnUtils {
     public static void scaleSecondarySkillByTier(LivingEntity entity, int tier, double baseSecondarySkill) {
         Attribute attr = TieringRegistry.getSecondarySkillStrengthAttribute();
         if (attr != null) {
-            Objects.requireNonNull(entity.getAttribute(attr)).setBaseValue(baseSecondarySkill * SpawnUtils.tierMultiplier(tier));
+            Objects.requireNonNull(entity.getAttribute((Holder<Attribute>) attr)).setBaseValue(baseSecondarySkill * SpawnUtils.tierMultiplier(tier));
         }
     }
 
@@ -215,10 +216,10 @@ public class SpawnUtils {
         // Scale skill attributes if available
         Attribute primarySkill = TieringRegistry.getPrimarySkillStrengthAttribute();
         if (primarySkill != null) {
-            var primaryAttr = entity.getAttribute(primarySkill);
+            var primaryAttr = entity.getAttribute((Holder<Attribute>) primarySkill);
             if (primaryAttr != null) {
                 double primaryMultiplier = CommonConfig.primarySkillMultiplierPerTier.get();
-                double currentPrimary = entity.getAttributeValue(primarySkill);
+                double currentPrimary = entity.getAttributeValue((Holder<Attribute>) primarySkill);
                 double scaledPrimary = currentPrimary * primaryMultiplier * tierMultiplier;
                 primaryAttr.setBaseValue(scaledPrimary);
             }
@@ -226,10 +227,10 @@ public class SpawnUtils {
         
         Attribute secondarySkill = TieringRegistry.getSecondarySkillStrengthAttribute();
         if (secondarySkill != null) {
-            var secondaryAttr = entity.getAttribute(secondarySkill);
+            var secondaryAttr = entity.getAttribute((Holder<Attribute>) secondarySkill);
             if (secondaryAttr != null) {
                 double secondaryMultiplier = CommonConfig.secondarySkillMultiplierPerTier.get();
-                double currentSecondary = entity.getAttributeValue(secondarySkill);
+                double currentSecondary = entity.getAttributeValue((Holder<Attribute>) secondarySkill);
                 double scaledSecondary = currentSecondary * secondaryMultiplier * tierMultiplier;
                 secondaryAttr.setBaseValue(scaledSecondary);
             }

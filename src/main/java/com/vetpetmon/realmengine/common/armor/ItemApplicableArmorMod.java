@@ -8,8 +8,8 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -19,11 +19,13 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.component.DataComponents;
 
 public class ItemApplicableArmorMod extends Item {
 
@@ -37,7 +39,7 @@ public class ItemApplicableArmorMod extends Item {
 
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(Level level, Player player, @NotNull InteractionHand hand) {
-        ItemStack held = player.getItemInHand(hand);
+        ItemStack held = player.getMainHandItem();
         if (level.isClientSide) return InteractionResultHolder.pass(held);
 
         // Determine supported armor items: prefer armorModPiece supplier if present, otherwise look up via ArmorPropertiesData
@@ -46,7 +48,7 @@ public class ItemApplicableArmorMod extends Item {
             supported = armorModPiece.armorItemSupplier().get();
         } else {
             // Find ArmorMod entries that reference this item
-            var key = ForgeRegistries.ITEMS.getKey(this);
+            var key = BuiltInRegistries.ITEM.getKey(this);
             String idStr = key != null ? key.toString() : null;
             if (idStr != null) for (var nsMap : ArmorPropertiesData.ARMOR_PROPERTIES.values())
                 for (var props : nsMap.values()) {
@@ -71,7 +73,7 @@ public class ItemApplicableArmorMod extends Item {
                     for (ArmorItem ai : supported) {
                         if (ai == null) continue;
                         if (ai == wornArmor) { matched = true; break; }
-                        ResourceLocation k1 = ForgeRegistries.ITEMS.getKey(ai), k2 = ForgeRegistries.ITEMS.getKey(wornArmor);
+                        ResourceLocation k1 = BuiltInRegistries.ITEM.getKey(ai), k2 = BuiltInRegistries.ITEM.getKey(wornArmor);
                         if (k1 != null && k1.equals(k2)) { matched = true; break; }
                         if (ai.getDescriptionId().equals(wornArmor.getDescriptionId())) { matched = true; break; }
                     }
@@ -88,9 +90,9 @@ public class ItemApplicableArmorMod extends Item {
                         // as ArmorModPiece.saveToTag would do when attribute data is available.
                         // Since we don't have attribute data here, just store the mod item id so downstream
                         // code can interpret it.
-                        var tag = target.getOrCreateTag();
+                        var tag = target.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
                         var modsTag = new CompoundTag();
-                        var key = ForgeRegistries.ITEMS.getKey(this);
+                        var key = BuiltInRegistries.ITEM.getKey(this);
                         if (key != null) modsTag.putString("mod_item_id", key.toString());
                         tag.put("modifiers", modsTag);
                     }
@@ -115,13 +117,13 @@ public class ItemApplicableArmorMod extends Item {
         // If we reach here, no valid equipped armor was found to apply to
         player.sendSystemMessage(Component.translatable("realmengine.message.no_applicable_armor").withStyle(ChatFormatting.RED));
         // play sound effect
-        level.playSound(player, player.blockPosition(), SoundEvents.NOTE_BLOCK_BASS.get(), player.getSoundSource(), 1.0f, 1.0f);
+        level.playSound(player, player.blockPosition(), SoundEvents.NOTE_BLOCK_BASS.value(), player.getSoundSource(), 1.0f, 1.0f);
         return InteractionResultHolder.pass(held);
     }
 
     // Add to tooltips the effect and applicable armor items
     @Override
-    public void appendHoverText(@NotNull ItemStack stack, Level level, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+    public void appendHoverText(@NotNull ItemStack stack, Item.TooltipContext level, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
 
         MutableComponent text1 = Component.translatable("armormod.tooltip." + this);
@@ -135,12 +137,12 @@ public class ItemApplicableArmorMod extends Item {
 
             if (attr != null) {
                 // Preserve existing behavior when attribute is available
-                if (mod.getOperation() == AttributeModifier.Operation.ADDITION)
+                if (mod.getOperation() == AttributeModifier.Operation.ADD_VALUE)
                     if (attr.equals(Attributes.KNOCKBACK_RESISTANCE)) amount *= 10;
 
                 String sign = (amount >= 0) ? "+" : "-";
                 String name = Component.translatable(attr.getDescriptionId()).getString();
-                String unit = (mod.getOperation() == AttributeModifier.Operation.ADDITION)
+                String unit = (mod.getOperation() == AttributeModifier.Operation.ADD_VALUE)
                         ? (!(attr.equals(Attributes.KNOCKBACK_RESISTANCE)) ? " pts" : "%")
                         : "";
                 tooltip.add(Component.literal("Mod: " + name + " " + sign + Math.abs(amount) + unit).withStyle(ChatFormatting.GRAY));
@@ -158,7 +160,7 @@ public class ItemApplicableArmorMod extends Item {
             items = armorModPiece.armorItemSupplier().get();
         } else {
             // derive items via ArmorPropertiesData
-            var key = ForgeRegistries.ITEMS.getKey(this);
+            var key = BuiltInRegistries.ITEM.getKey(this);
             String idStr = key != null ? key.toString() : null;
             if (idStr != null) {
                 for (var nsMap : ArmorPropertiesData.ARMOR_PROPERTIES.values()) {

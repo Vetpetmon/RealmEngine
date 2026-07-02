@@ -1,9 +1,13 @@
 package com.vetpetmon.realmengine.common.metaworld;
 
-import net.neoforged.neoforge.event.TickEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 /**
  * Server event handler for the Metaworld system.
@@ -11,7 +15,7 @@ import net.neoforged.fml.common.Mod;
  *
  * This class should be registered to the Forge event bus during mod initialization.
  */
-@Mod.EventBusSubscriber(modid = "realmengine", bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = "realmengine")
 public class MetaworldEventHandler {
 
     /**
@@ -21,9 +25,9 @@ public class MetaworldEventHandler {
      * @param event the tick event
      */
     @SubscribeEvent
-    public static void onServerTick(TickEvent.ServerTickEvent event) {
+    public static void onServerTick(ServerTickEvent.Post event) {
         // Only tick on the end phase to ensure all other game logic runs first
-        if (event.phase == TickEvent.Phase.END) {
+        {
             Metaworld.tick();
         }
     }

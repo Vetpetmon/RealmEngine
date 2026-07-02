@@ -1,6 +1,6 @@
 package com.vetpetmon.realmengine.common.metaworld;
 
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.bus.api.Event;
 
 /**
  * Abstract base class for implementing IMetaworldModule. This is a LIBRARY, we will use these later.

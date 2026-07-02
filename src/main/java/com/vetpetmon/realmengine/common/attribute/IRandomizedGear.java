@@ -3,6 +3,7 @@ package com.vetpetmon.realmengine.common.attribute;
 import com.vetpetmon.realmengine.RealmEngine;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -20,6 +21,8 @@ import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+
 
 /**
  * Interface for gear that has randomized stats
@@ -111,7 +114,7 @@ public interface IRandomizedGear {
      * @param mods List of possible mods (can be empty if using modsets)
      */
     default void generateGearMods(ItemStack stack, List<RealmEngineAttributeMod> mods) {
-        CompoundTag tag = stack.getOrCreateTag();
+        CompoundTag tag = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         CompoundTag modsTag = new CompoundTag();
         
         // Try to use modset first if available
@@ -167,7 +170,7 @@ public interface IRandomizedGear {
      * @return the list of BeastcuitAttributeMods
      */
     default List<RealmEngineAttributeMod> readModsFromStack(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         if (tag == null || !tag.contains(MODS_TAG))
             return Collections.emptyList();
         CompoundTag modsTag = tag.getCompound(MODS_TAG);
@@ -178,7 +181,7 @@ public interface IRandomizedGear {
             if (modsTag.contains(baseMod.getModiName())) {
                 double amount = modsTag.getDouble(baseMod.getModiName());
                 mods.add(RealmEngineAttributeMod.createFixedMod(
-                        baseMod.getAttribute(), baseMod::getModiId, baseMod::getModiName, () -> amount
+                        (Holder<Attribute>) baseMod.getAttribute(), baseMod::getModiId, baseMod::getModiName, () -> amount
                 ));
             }
         }
@@ -193,7 +196,7 @@ public interface IRandomizedGear {
      * @return list containing a single RealmfallAttributeMod if present, otherwise empty
      */
     default List<RealmEngineAttributeMod> readArmorModsForArmorItem(ArmorItem armorItem, ItemStack stack) {
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         if (tag == null || !tag.contains(ARMOR_MODIFIER_TAG))
             return Collections.emptyList();
         CompoundTag modsTag = tag.getCompound(ARMOR_MODIFIER_TAG);
@@ -223,7 +226,7 @@ public interface IRandomizedGear {
             // Create a lazy resolver mod so the attribute can be resolved later
             rm = RealmEngineAttributeMod.createFixedModByAttributeName(modAttributeStr, () -> finalUuid, () -> modName, () -> modAmount);
         } else {
-            rm = RealmEngineAttributeMod.createFixedMod(attribute, () -> finalUuid, () -> modName, () -> modAmount);
+            rm = RealmEngineAttributeMod.createFixedMod((Holder<Attribute>) attribute, () -> finalUuid, () -> modName, () -> modAmount);
         }
         return List.of(rm);
     }
@@ -236,7 +239,7 @@ public interface IRandomizedGear {
      * @return true if an ArmorModPiece exists, false otherwise
      */
     static boolean hasArmorModPiece(ItemStack stack, String name) {
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         if (tag == null || !tag.contains(ARMOR_MODIFIER_TAG))
             return false;
         CompoundTag modsTag = tag.getCompound(ARMOR_MODIFIER_TAG);
@@ -272,7 +275,7 @@ public interface IRandomizedGear {
     default void ensureModsExist(ItemStack stack, Level level) {
         if (level == null || level.isClientSide)
             return;
-        CompoundTag tag = stack.getOrCreateTag();
+        CompoundTag tag = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         if (!tag.contains(MODS_TAG) || tag.getCompound(MODS_TAG).isEmpty())
             generateRandomMods(stack);
     }
@@ -298,7 +301,7 @@ public interface IRandomizedGear {
             slotName = (stack.getItem() instanceof IRandomizedGear gear && gear.isCurio()) ? "CURIO" : "UNKNOWN" ;
         else
             slotName = slot.name();
-        String base = mod.getModiId().toString() + "|" + slotName + "|" + (stack.hasTag() ? Objects.requireNonNull(stack.getTag()).toString() : "");
+        String base = mod.getModiId().toString() + "|" + slotName + "|" + (stack.has(net.minecraft.core.component.DataComponents.CUSTOM_DATA) ? Objects.requireNonNull(stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag()).toString() : "");
         return UUID.nameUUIDFromBytes(base.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -332,7 +335,7 @@ public interface IRandomizedGear {
 
             double amount = mod.getAmount();
 
-            if (mod.getOperation() == AttributeModifier.Operation.ADDITION) {
+            if (mod.getOperation() == AttributeModifier.Operation.ADD_VALUE) {
                 if (mod.getAttribute().equals(Attributes.KNOCKBACK_RESISTANCE) || mod.getAttribute().equals(Attributes.MOVEMENT_SPEED)) amount *= 10;
             }
             else amount *= 100;
@@ -342,7 +345,7 @@ public interface IRandomizedGear {
             amount = Math.abs(amount); // show absolute value in tooltip
 
             tooltipList.add(Component.translatable(
-                            sign + mod.getOperation().toValue(),
+                            sign + mod.getOperation(),
                             ATTRIBUTE_MODIFIER_FORMAT.format(amount),
                             Component.translatable(mod.getAttribute().getDescriptionId()))
                     .withStyle(ChatFormatting.BLUE));
@@ -362,13 +365,11 @@ public interface IRandomizedGear {
             else slot = getGearEquipmentSlot();
 
             for (RealmEngineAttributeMod mod : getAttributeMods(stack, world)) {
-                AttributeInstance instance = wearer.getAttribute(mod.getAttribute());
+                AttributeInstance instance = wearer.getAttribute((Holder<Attribute>) mod.getAttribute());
                 if (instance != null) {
-                    UUID derived = deriveInstanceUUID(mod, stack, slot);
-                    AttributeModifier existingMod = instance.getModifier(derived);
-                    if (existingMod == null || existingMod.getAmount() != mod.getAmount()) {
-                        instance.removeModifier(derived);
-                        instance.addTransientModifier(new AttributeModifier(derived, deriveInstanceName(mod, stack, slot), mod.getAmount(), mod.getOperation()));
+                    if (mod.createModifier() == null || mod.createModifier().amount() != mod.getAmount()) {
+                        instance.removeModifier(mod.createModifier());
+                        instance.addTransientModifier(mod.createModifier());
                         mod.onAttributeUpdate(wearer);
                     }
                 }
@@ -389,10 +390,9 @@ public interface IRandomizedGear {
             else slot = getGearEquipmentSlot();
 
             for (RealmEngineAttributeMod mod : getAttributeMods(stack, world)) {
-                AttributeInstance instance = wearer.getAttribute(mod.getAttribute());
+                AttributeInstance instance = wearer.getAttribute((Holder<Attribute>) mod.getAttribute());
                 if (instance != null) {
-                    UUID derived = deriveInstanceUUID(mod, stack, slot);
-                    instance.removeModifier(derived);
+                    instance.removeModifier(mod.createModifier());
                     mod.onAttributeUpdate(wearer);
                 }
             }
@@ -406,11 +406,11 @@ public interface IRandomizedGear {
             else slot = getGearEquipmentSlot();
 
             for (RealmEngineAttributeMod mod : getAttributeMods(stack, world)) {
-                AttributeInstance instance = wearer.getAttribute(mod.getAttribute());
+                AttributeInstance instance = wearer.getAttribute((Holder<Attribute>) mod.getAttribute());
                 if (instance != null) {
                     UUID derived = deriveInstanceUUID(mod, stack, slot);
-                    instance.removeModifier(derived);
-                    AttributeModifier modifier = new AttributeModifier(derived, deriveInstanceName(mod, stack, slot), mod.getAmount(), mod.getOperation());
+                    AttributeModifier modifier = mod.createModifier();
+                    instance.removeModifier(modifier);
                     instance.addTransientModifier(modifier);
                     mod.onAttributeUpdate(wearer);
                 }

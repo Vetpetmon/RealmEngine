@@ -94,8 +94,8 @@ public class ModsetData {
 
             // Create the appropriate modifier type based on operation
             return switch (operation) {
-                case MULTIPLY_BASE -> RealmEngineAttributeMod.createMultiplierModByAttributeName(attributeName, uuidSupplier, nameSupplier, valueSupplier);
-                case MULTIPLY_TOTAL -> RealmEngineAttributeMod.createTotalMultiplierModByAttributeName(attributeName, uuidSupplier, nameSupplier, valueSupplier);
+                case ADD_MULTIPLIED_BASE -> RealmEngineAttributeMod.createMultiplierModByAttributeName(attributeName, uuidSupplier, nameSupplier, valueSupplier);
+                case ADD_MULTIPLIED_TOTAL -> RealmEngineAttributeMod.createTotalMultiplierModByAttributeName(attributeName, uuidSupplier, nameSupplier, valueSupplier);
                 default -> RealmEngineAttributeMod.createFixedModByAttributeName(attributeName, uuidSupplier, nameSupplier, valueSupplier);
             };
         }

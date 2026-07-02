@@ -13,38 +13,40 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.NetworkEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 
 import java.util.function.Supplier;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraft.core.component.DataComponents;
 
 public record ApplyArmorModToSlotPacket(int slotIndex, String modItemId) {
 
     public static void encode(ApplyArmorModToSlotPacket pkt, FriendlyByteBuf buf) {
-        buf.writeInt(pkt.slotIndex);
-        buf.writeUtf(pkt.modItemId);
+        buf.writeInt(pkt.slotIndex());
+        buf.writeUtf(pkt.modItemId());
     }
 
     public static ApplyArmorModToSlotPacket decode(FriendlyByteBuf buf) {
         return new ApplyArmorModToSlotPacket(buf.readInt(), buf.readUtf());
     }
 
-    public static void handle(ApplyArmorModToSlotPacket pkt, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handle(ApplyArmorModToSlotPacket pkt, IPayloadContext ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.enqueueWork(() -> {
             ServerPlayer player = ctx.getSender();
             if (player == null) return;
 
             var menu = player.containerMenu;
-            if (pkt.slotIndex < 0 || pkt.slotIndex >= menu.slots.size()) return;
+            if (pkt.slotIndex() < 0 || pkt.slotIndex() >= menu.slots.size()) return;
 
-            var slot = menu.slots.get(pkt.slotIndex);
+            var slot = menu.slots.get(pkt.slotIndex());
             ItemStack target = slot.getItem();
             if (target.isEmpty()) return;
             if (!(target.getItem() instanceof ArmorItem wornArmor)) return;
 
             // Resolve mod item from modItemId
-            var modRl = ResourceLocation.tryParse(pkt.modItemId);
+            var modRl = ResourceLocation.tryParse(pkt.modItemId());
             if (modRl == null) return;
 
             var modItem = BuiltInRegistries.ITEM.get(modRl);
@@ -105,7 +107,7 @@ public record ApplyArmorModToSlotPacket(int slotIndex, String modItemId) {
 
             if (!canApply) {
                 player.sendSystemMessage(Component.translatable("realmengine.message.no_applicable_armor").withStyle(ChatFormatting.RED));
-                player.playSound(SoundEvents.NOTE_BLOCK_BASS.get(), 1.0f, 1.0f);
+                player.playSound(SoundEvents.NOTE_BLOCK_BASS.value(), 1.0f, 1.0f);
                 return;
             }
 
@@ -114,13 +116,13 @@ public record ApplyArmorModToSlotPacket(int slotIndex, String modItemId) {
                 piece.saveToTag(target);
             } else {
                 // For datapack-driven mods, write mod data to target
-                var tag = target.getOrCreateTag();
+                var tag = target.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
                 var modifiers = new CompoundTag();
-                modifiers.putString("mod_item_id", pkt.modItemId);
+                modifiers.putString("mod_item_id", pkt.modItemId());
                 tag.put("modifiers", modifiers);
 
                 // Find the ArmorMod for this specific armor item
-                var matched = ArmorModUtils.findArmorModForItem(pkt.modItemId, wornArmor);
+                var matched = ArmorModUtils.findArmorModForItem(pkt.modItemId(), wornArmor);
                 if (matched != null && matched.getModEffects() != null && !matched.getModEffects().isEmpty()) {
                     var armorModsCompound = new CompoundTag();
                     for (var me : matched.getModEffects().entrySet()) {

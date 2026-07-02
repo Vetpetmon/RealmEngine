@@ -1,11 +1,13 @@
 package com.vetpetmon.realmengine.common.armor;
 
 import com.vetpetmon.realmengine.common.attribute.RealmEngineAttributeMod;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -23,7 +25,7 @@ public record ArmorModPiece(@Nullable RealmEngineAttributeMod mod, Supplier<List
 
     // Save to NBT tag
     public void saveToTag(ItemStack stack) {
-        CompoundTag tag = stack.getOrCreateTag();
+        CompoundTag tag = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         CompoundTag modsTag = new CompoundTag();
         // Implementation to save modTemp data to modsTag
         RealmEngineAttributeMod modTemp = mod;
@@ -34,8 +36,8 @@ public record ArmorModPiece(@Nullable RealmEngineAttributeMod mod, Supplier<List
             // Store the attribute as its registry name (ResourceLocation string)
             String attrName = modTemp.getAttributeRegistryName();
             if (attrName == null || attrName.isEmpty())
-                if (modTemp.getAttribute() != null && ForgeRegistries.ATTRIBUTES.getKey(modTemp.getAttribute()) != null)
-                    attrName = Objects.requireNonNull(ForgeRegistries.ATTRIBUTES.getKey(modTemp.getAttribute())).toString();
+                if (modTemp.getAttribute() != null && BuiltInRegistries.ATTRIBUTE.getKey(modTemp.getAttribute()) != null)
+                    attrName = Objects.requireNonNull(BuiltInRegistries.ATTRIBUTE.getKey(modTemp.getAttribute())).toString();
             if (attrName != null && !attrName.isEmpty())
                 modsTag.putString("mod_attribute", attrName);
         }
@@ -44,7 +46,7 @@ public record ArmorModPiece(@Nullable RealmEngineAttributeMod mod, Supplier<List
 
     // Load from NBT tag
     public static ArmorModPiece loadFromTag(ItemStack stack, Supplier<List<ArmorItem>> armorItemSupplier) {
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         if (tag != null && tag.contains(MODIFIER_TAG)) {
             CompoundTag modsTag = tag.getCompound(MODIFIER_TAG);
             // Read mod data from modsTag
@@ -71,7 +73,7 @@ public record ArmorModPiece(@Nullable RealmEngineAttributeMod mod, Supplier<List
                 // Create a mod that will resolve its attribute lazily
                 rm = RealmEngineAttributeMod.createFixedModByAttributeName(modAttributeStr, () -> finalUuid, () -> modName, () -> modAmount);
             else
-                rm = RealmEngineAttributeMod.createFixedMod(attribute, () -> finalUuid, () -> modName, () -> modAmount);
+                rm = RealmEngineAttributeMod.createFixedMod((Holder<Attribute>) attribute, () -> finalUuid, () -> modName, () -> modAmount);
 
             return new ArmorModPiece(rm, armorItemSupplier);
         }
@@ -87,7 +89,7 @@ public record ArmorModPiece(@Nullable RealmEngineAttributeMod mod, Supplier<List
             // Direct instance match
             if (candidate == armorItem) return true;
             // Registry name match (preferred, robust)
-            ResourceLocation k1 = ForgeRegistries.ITEMS.getKey(candidate), k2 = ForgeRegistries.ITEMS.getKey(armorItem);
+            ResourceLocation k1 = BuiltInRegistries.ITEM.getKey(candidate), k2 = BuiltInRegistries.ITEM.getKey(armorItem);
             if (k1 != null && k1.equals(k2)) return true;
             // Fallback: compare description id (less strict than registry but safer than class equality)
             if (candidate.getDescriptionId().equals(armorItem.getDescriptionId())) return true;

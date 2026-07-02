@@ -7,6 +7,7 @@ import com.vetpetmon.realmengine.common.attribute.ModsetData;
 import com.vetpetmon.realmengine.common.attribute.RealmEngineAttributeMod;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;

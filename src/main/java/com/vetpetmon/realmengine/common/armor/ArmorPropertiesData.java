@@ -1,8 +1,10 @@
 package com.vetpetmon.realmengine.common.armor;
 
+import com.vetpetmon.realmengine.RealmEngine;
 import com.vetpetmon.realmengine.common.attribute.IRandomizedGear;
 import com.vetpetmon.realmengine.common.attribute.RealmEngineAttributeMod;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -200,9 +202,9 @@ public class ArmorPropertiesData {
         if (!(stack.getItem() instanceof ArmorItem armorItem)) return;
 
         // Only process if this is the correct slot for this armor piece
-        if (event.getSlotType() != armorItem.getEquipmentSlot()) return;
+        if (event.getItemStack().getEquipmentSlot() != armorItem.getEquipmentSlot()) return;
 
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         if (tag == null) return;
 
         // Read mod_item_id to find the ArmorMod definition for operation types
@@ -235,7 +237,7 @@ public class ArmorPropertiesData {
                 String modifierName = "gear_mod_" + modName;
 
                 // Add the modifier to the event
-                event.addModifier(attribute, new AttributeModifier(modUuid, modifierName, amount, operation));
+                event.addModifier(attribute, new AttributeModifier(ResourceLocation.fromNamespaceAndPath(RealmEngine.MODID,modifierName), amount, operation));
             }
         }
 
@@ -255,7 +257,7 @@ public class ArmorPropertiesData {
                 if (attribute == null) continue;
 
                 // Get operation type
-                AttributeModifier.Operation operation = effectMod != null ? effectMod.getOperation() : AttributeModifier.Operation.ADDITION;
+                AttributeModifier.Operation operation = effectMod != null ? effectMod.getOperation() : AttributeModifier.Operation.ADD_VALUE;
 
                 // Build a unique UUID for this modifier
                 UUID modUuid = deriveGearModifierUUID(stack, "armor_mod_" + modName);
@@ -284,7 +286,7 @@ public class ArmorPropertiesData {
         }
 
         // Determine operation (default to ADDITION if we can't find the definition)
-        AttributeModifier.Operation operation = AttributeModifier.Operation.ADDITION;
+        AttributeModifier.Operation operation = AttributeModifier.Operation.ADD_VALUE;
         if (modDef != null) operation = modDef.getOperation();
         return operation;
     }
@@ -392,7 +394,7 @@ public class ArmorPropertiesData {
                             if (hasFullSet) {
                                 // Apply modifier if missing or different value
                                 AttributeModifier existing = instance.getModifier(derived);
-                                if (existing == null || Double.compare(existing.getAmount(), mod.getAmount()) != 0 || existing.getOperation() != mod.getOperation()) {
+                                if (existing == null || Double.compare(existing.amount(), mod.getAmount()) != 0 || existing.operation() != mod.getOperation()) {
                                     // remove any stale modifier and add new transient one
                                     instance.removeModifier(derived);
                                     instance.addTransientModifier(new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));

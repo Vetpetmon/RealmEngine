@@ -4,14 +4,13 @@ import com.vetpetmon.realmengine.RealmEngine;
 import com.vetpetmon.realmengine.common.attribute.ModsetData;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraftforge.network.NetworkEvent;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * Packet to sync modset data from server to client.
@@ -76,7 +75,7 @@ public class SyncModsetsPacket {
         return new SyncModsetsPacket(buf);
     }
 
-    public static void handle(SyncModsetsPacket pkt, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handle(SyncModsetsPacket pkt, IPayloadContext ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.enqueueWork(() -> {
             if (ctx.getDirection().getReceptionSide().isClient()) {

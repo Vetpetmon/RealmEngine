@@ -7,8 +7,8 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
-import net.neoforged.neoforge.network.NetworkEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * Packet to sync armor properties data from server to client.
@@ -80,7 +81,7 @@ public class SyncArmorPropertiesPacket {
         return new SyncArmorPropertiesPacket(buf);
     }
 
-    public static void handle(SyncArmorPropertiesPacket pkt, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handle(SyncArmorPropertiesPacket pkt, IPayloadContext ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.enqueueWork(() -> {
             if (ctx.getDirection().getReceptionSide().isClient()) {
@@ -178,7 +179,7 @@ public class SyncArmorPropertiesPacket {
             buf.writeInt(armorItemEntries.size());
             for (SerializedArmorItemEntry entry : armorItemEntries) {
                 buf.writeResourceLocation(entry.itemId);
-                buf.writeUtf(entry.modsetId != null ? entry.modsetId : "");
+                buf.writeUtf(entry.modsetId() != null ? entry.modsetId() : "");
             }
 
             buf.writeInt(applicableMods.size());
@@ -200,7 +201,7 @@ public class SyncArmorPropertiesPacket {
             props.armorItemEntries = new ArrayList<>();
             for (SerializedArmorItemEntry entry : armorItemEntries) {
                 Item item = BuiltInRegistries.ITEM.get(entry.itemId);
-                if (item != null) props.armorItemEntries.add(new ArmorPropertiesData.ArmorItemEntry(item, entry.modsetId));
+                if (item != null) props.armorItemEntries.add(new ArmorPropertiesData.ArmorItemEntry(item, entry.modsetId()));
             }
 
             // Deserialize armor mods

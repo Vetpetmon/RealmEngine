@@ -11,9 +11,10 @@ import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ public class ItemPropertiesReloadListener extends SimpleJsonResourceReloadListen
                         if (itemId != null) {
                             ResourceLocation itemRl = ResourceLocation.tryParse(itemId);
                             if (itemRl != null) {
-                                Item item = ForgeRegistries.ITEMS.getValue(itemRl);
+                                Item item = BuiltInRegistries.ITEM.get(itemRl);
                                 if (item != null) {
                                     if (item instanceof ArmorItem) {
                                         if (!optional) RealmEngine.LOGGER.warn("ItemProperties: armor item '{}' is not allowed in {}; skipping", itemId, rl); continue;
@@ -108,10 +109,7 @@ public class ItemPropertiesReloadListener extends SimpleJsonResourceReloadListen
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server != null) {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                RealmEngine.PACKET_HANDLER.send(
-                        PacketDistributor.PLAYER.with(() -> player),
-                        new SyncItemPropertiesPacket(ITEM_PROPERTIES)
-                );
+                PacketDistributor.sendToPlayer(player, new SyncItemPropertiesPacket(ITEM_PROPERTIES));
             }
             RealmEngine.LOGGER.info("Synced item properties to {} connected players", server.getPlayerList().getPlayerCount());
         }

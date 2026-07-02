@@ -1,8 +1,9 @@
 package com.vetpetmon.realmengine.common.metaworld.example;
 
 import com.vetpetmon.realmengine.common.metaworld.MetaworldTick;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 /**
  * Example event handler for the example metaworld module.
@@ -11,7 +12,7 @@ import net.minecraftforge.fml.common.Mod;
  * This is a LIBRARY EXAMPLE, showing how modules receive and process tick events.
  */
 @SuppressWarnings("unused")
-@Mod.EventBusSubscriber(modid = "realmengine", bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = "realmengine")
 public class ExampleMetaworldEventHandler {
 
     /**

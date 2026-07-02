@@ -6,12 +6,11 @@ import com.google.gson.JsonSerializationContext;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.storage.loot.Serializer;
 import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.RegistryObject;
 import org.jetbrains.annotations.NotNull;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 /**
  * Registry for RealmEngine's custom loot conditions.
@@ -23,7 +22,7 @@ public class LootConditions {
             DeferredRegister.create(REGISTRY_KEY, "realmengine");
 
     // Register the tier condition
-    public static final RegistryObject<LootItemConditionType> TIER = LOOT_CONDITIONS.register("tier", 
+    public static final DeferredHolder<LootItemConditionType, LootItemConditionType> TIER = LOOT_CONDITIONS.register("tier", 
             () -> new LootItemConditionType(new Serializer<TierCondition>() {
                 @Override
                 public void serialize(@NotNull JsonObject jsonObject, @NotNull TierCondition tierCondition, @NotNull JsonSerializationContext jsonSerializationContext) {
