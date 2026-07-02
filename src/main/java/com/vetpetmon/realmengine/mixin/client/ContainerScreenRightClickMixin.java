@@ -7,7 +7,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -55,7 +57,7 @@ public class ContainerScreenRightClickMixin {
 
         // Determine registry id of carried mod item and send with packet so server can resolve it even if cursor unsynced
         String modItemId = "";
-        var key = ForgeRegistries.ITEMS.getKey(carried.getItem());
+        var key = BuiltInRegistries.ITEM.getKey(carried.getItem());
         if (key != null) modItemId = key.toString();
 
         // Send packet to server to apply this mod to the clicked slot

@@ -1,6 +1,7 @@
 package com.vetpetmon.realmengine.common.metaworld;
 
-import net.minecraftforge.eventbus.api.Event;
+
+import net.neoforged.bus.api.Event;
 
 /**
  * Interface that defines the contract for a Metaworld module. This is a LIBRARY, we will use these later.

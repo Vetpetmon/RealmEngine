@@ -1,6 +1,7 @@
 package com.vetpetmon.realmengine.common.metaworld;
 
-import net.minecraftforge.eventbus.api.IEventBus;
+
+import net.neoforged.bus.api.IEventBus;
 
 /**
  * The metaworld is a system that manages background events in the level. No chunkloading is required, as the metaworld is not tied to any specific location.

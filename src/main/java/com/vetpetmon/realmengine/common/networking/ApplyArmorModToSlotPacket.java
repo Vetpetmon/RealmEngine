@@ -13,8 +13,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.network.NetworkEvent;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.function.Supplier;
 
@@ -47,7 +47,7 @@ public record ApplyArmorModToSlotPacket(int slotIndex, String modItemId) {
             var modRl = ResourceLocation.tryParse(pkt.modItemId);
             if (modRl == null) return;
 
-            var modItem = ForgeRegistries.ITEMS.getValue(modRl);
+            var modItem = BuiltInRegistries.ITEM.get(modRl);
             if (!(modItem instanceof ItemApplicableArmorMod applicableMod)) return;
 
             // Get carried stack (for consumption)
@@ -69,7 +69,7 @@ public record ApplyArmorModToSlotPacket(int slotIndex, String modItemId) {
                 supported = piece.armorItemSupplier().get();
             } else {
                 // Find ArmorMod entries that reference this item (SAME as ItemApplicableArmorMod)
-                var key = ForgeRegistries.ITEMS.getKey(applicableMod);
+                var key = BuiltInRegistries.ITEM.getKey(applicableMod);
                 String idStr = key != null ? key.toString() : null;
                 if (idStr != null) {
                     for (var nsMap : ArmorPropertiesData.ARMOR_PROPERTIES.values()) {
@@ -96,8 +96,8 @@ public record ApplyArmorModToSlotPacket(int slotIndex, String modItemId) {
                 for (ArmorItem ai : supported) {
                     if (ai == null) continue;
                     if (ai == wornArmor) { canApply = true; break; }
-                    var k1 = ForgeRegistries.ITEMS.getKey(ai);
-                    var k2 = ForgeRegistries.ITEMS.getKey(wornArmor);
+                    var k1 = BuiltInRegistries.ITEM.getKey(ai);
+                    var k2 = BuiltInRegistries.ITEM.getKey(wornArmor);
                     if (k1 != null && k1.equals(k2)) { canApply = true; break; }
                     if (ai.getDescriptionId().equals(wornArmor.getDescriptionId())) { canApply = true; break; }
                 }

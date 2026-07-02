@@ -7,8 +7,8 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.network.NetworkEvent;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -126,7 +126,7 @@ public class SyncArmorPropertiesPacket {
             this.armorItemIds = new ArrayList<>();
             if (props.armorItems != null) {
                 for (Item item : props.armorItems) {
-                    ResourceLocation rl = ForgeRegistries.ITEMS.getKey(item);
+                    ResourceLocation rl = BuiltInRegistries.ITEM.getKey(item);
                     if (rl != null) this.armorItemIds.add(rl);
                 }
             }
@@ -135,7 +135,7 @@ public class SyncArmorPropertiesPacket {
             this.armorItemEntries = new ArrayList<>();
             if (props.armorItemEntries != null) {
                 for (ArmorPropertiesData.ArmorItemEntry entry : props.armorItemEntries) {
-                    ResourceLocation rl = ForgeRegistries.ITEMS.getKey(entry.item());
+                    ResourceLocation rl = BuiltInRegistries.ITEM.getKey(entry.item());
                     if (rl != null) this.armorItemEntries.add(new SerializedArmorItemEntry(rl, entry.modsetId()));
                 }
             }
@@ -192,14 +192,14 @@ public class SyncArmorPropertiesPacket {
             // Deserialize armor items
             props.armorItems = new ArrayList<>();
             for (ResourceLocation rl : armorItemIds) {
-                Item item = ForgeRegistries.ITEMS.getValue(rl);
+                Item item = BuiltInRegistries.ITEM.get(rl);
                 if (item != null) props.armorItems.add(item);
             }
 
             // Deserialize armor item entries
             props.armorItemEntries = new ArrayList<>();
             for (SerializedArmorItemEntry entry : armorItemEntries) {
-                Item item = ForgeRegistries.ITEMS.getValue(entry.itemId);
+                Item item = BuiltInRegistries.ITEM.get(entry.itemId);
                 if (item != null) props.armorItemEntries.add(new ArmorPropertiesData.ArmorItemEntry(item, entry.modsetId));
             }
 
@@ -243,7 +243,7 @@ public class SyncArmorPropertiesPacket {
             this.applicableItemIds = new ArrayList<>();
             if (mod.applicableItems != null) {
                 for (Item item : mod.applicableItems) {
-                    ResourceLocation rl = ForgeRegistries.ITEMS.getKey(item);
+                    ResourceLocation rl = BuiltInRegistries.ITEM.getKey(item);
                     if (rl != null) this.applicableItemIds.add(rl);
                 }
             }
@@ -304,12 +304,12 @@ public class SyncArmorPropertiesPacket {
         ArmorPropertiesData.ArmorMod deserialize() {
             // Resolve mod item from registry
             ResourceLocation modRl = ResourceLocation.tryParse(itemID);
-            Item modItem = modRl != null ? ForgeRegistries.ITEMS.getValue(modRl) : null;
+            Item modItem = modRl != null ? BuiltInRegistries.ITEM.get(modRl) : null;
 
             // Deserialize applicable items
             List<Item> applicableItems = new ArrayList<>();
             for (ResourceLocation rl : applicableItemIds) {
-                Item item = ForgeRegistries.ITEMS.getValue(rl);
+                Item item = BuiltInRegistries.ITEM.get(rl);
                 if (item != null) applicableItems.add(item);
             }
 

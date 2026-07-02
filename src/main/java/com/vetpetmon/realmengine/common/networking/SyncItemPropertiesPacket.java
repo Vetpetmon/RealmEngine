@@ -5,8 +5,8 @@ import com.vetpetmon.realmengine.common.item.ItemPropertiesData;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.network.NetworkEvent;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -115,7 +115,7 @@ public class SyncItemPropertiesPacket {
             this.itemIds = new ArrayList<>();
             if (props.items != null) {
                 for (Item item : props.items) {
-                    ResourceLocation rl = ForgeRegistries.ITEMS.getKey(item);
+                    ResourceLocation rl = BuiltInRegistries.ITEM.getKey(item);
                     if (rl != null) this.itemIds.add(rl);
                 }
             }
@@ -123,7 +123,7 @@ public class SyncItemPropertiesPacket {
             this.itemEntries = new ArrayList<>();
             if (props.itemEntries != null) {
                 for (ItemPropertiesData.ItemEntry entry : props.itemEntries) {
-                    ResourceLocation rl = ForgeRegistries.ITEMS.getKey(entry.item());
+                    ResourceLocation rl = BuiltInRegistries.ITEM.getKey(entry.item());
                     if (rl != null) this.itemEntries.add(new SerializedItemEntry(rl, entry.modsetId()));
                 }
             }
@@ -166,13 +166,13 @@ public class SyncItemPropertiesPacket {
 
             props.items = new ArrayList<>();
             for (ResourceLocation rl : itemIds) {
-                Item item = ForgeRegistries.ITEMS.getValue(rl);
+                Item item = BuiltInRegistries.ITEM.get(rl);
                 if (item != null) props.items.add(item);
             }
 
             props.itemEntries = new ArrayList<>();
             for (SerializedItemEntry entry : itemEntries) {
-                Item item = ForgeRegistries.ITEMS.getValue(entry.itemId);
+                Item item = BuiltInRegistries.ITEM.get(entry.itemId);
                 if (item != null) props.itemEntries.add(new ItemPropertiesData.ItemEntry(item, entry.modsetId));
             }
 
@@ -190,4 +190,3 @@ public class SyncItemPropertiesPacket {
         }
     }
 }
-

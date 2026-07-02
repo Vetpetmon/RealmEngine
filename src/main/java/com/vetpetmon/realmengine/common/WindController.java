@@ -3,9 +3,8 @@ package com.vetpetmon.realmengine.common;
 import com.vetpetmon.realmengine.RealmEngine;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = RealmEngine.MODID)
 public class WindController {

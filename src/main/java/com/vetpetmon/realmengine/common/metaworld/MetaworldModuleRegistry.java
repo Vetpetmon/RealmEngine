@@ -1,7 +1,8 @@
 package com.vetpetmon.realmengine.common.metaworld;
 
-import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.eventbus.api.IEventBus;
+
+import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.IEventBus;
 
 import java.util.*;
 
