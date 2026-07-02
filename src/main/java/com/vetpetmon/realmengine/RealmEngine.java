@@ -13,12 +13,16 @@ import com.vetpetmon.realmengine.common.tiering.loot.LootConditions;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.NetworkRegistry;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import org.slf4j.Logger;
 
 @Mod(RealmEngine.MODID) // Recognize this as its own mod
@@ -106,6 +110,12 @@ public class RealmEngine {
             LOGGER.debug("Synced armor properties, item properties, and modsets to player: {}", player.getName().getString());
         }
         PROXY.setCurrentDayOfWeek(); // Update current day of the week on player login in case the server has been running for a while and the day has changed
+    }
+
+    @SubscribeEvent // on the mod event bus
+    public static void register(RegisterPayloadHandlersEvent event) {
+        // Sets the current network version
+        final PayloadRegistrar registrar = event.registrar("1");
     }
 
     public void onServerStarting(ServerStartingEvent event)

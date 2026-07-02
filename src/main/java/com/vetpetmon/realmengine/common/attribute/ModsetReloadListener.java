@@ -10,8 +10,6 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -122,15 +120,15 @@ public class ModsetReloadListener extends SimpleJsonResourceReloadListener {
      * Parse operation string to AttributeModifier.Operation enum
      */
     private AttributeModifier.Operation parseOperation(String operationStr) {
-        if (operationStr == null) return AttributeModifier.Operation.ADDITION;
+        if (operationStr == null) return AttributeModifier.Operation.ADD_VALUE;
 
         String normalized = operationStr.toLowerCase().trim();
         if (normalized.contains("multiply") && normalized.contains("base"))
-            return AttributeModifier.Operation.MULTIPLY_BASE;
+            return AttributeModifier.Operation.ADD_MULTIPLIED_BASE;
         else if (normalized.contains("multiply") && (normalized.contains("total") || normalized.contains("overall")))
-            return AttributeModifier.Operation.MULTIPLY_TOTAL;
+            return AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL;
         else
-            return AttributeModifier.Operation.ADDITION;
+            return AttributeModifier.Operation.ADD_VALUE;
     }
 
     /**
