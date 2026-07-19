@@ -1,16 +1,15 @@
 package com.vetpetmon.realmengine.common.tiering.loot;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
+import com.mojang.serialization.*;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import org.jetbrains.annotations.NotNull;
 import net.neoforged.neoforge.registries.DeferredHolder;
+
+import java.util.stream.Stream;
 
 /**
  * Registry for RealmEngine's custom loot conditions.
@@ -22,21 +21,33 @@ public class LootConditions {
             DeferredRegister.create(REGISTRY_KEY, "realmengine");
 
     // Register the tier condition
-    public static final DeferredHolder<LootItemConditionType, LootItemConditionType> TIER = LOOT_CONDITIONS.register("tier", 
-            () -> new LootItemConditionType(new Serializer<TierCondition>() {
+    // updated to Neoforge 1.21.1, hopefully
+    public static final DeferredHolder<LootItemConditionType, LootItemConditionType> TIER = LOOT_CONDITIONS.register("tier",
+            () -> new LootItemConditionType(new MapCodec<TierCondition>() { //This is so amazingly jank Im surprised if it works 1:1
                 @Override
-                public void serialize(@NotNull JsonObject jsonObject, @NotNull TierCondition tierCondition, @NotNull JsonSerializationContext jsonSerializationContext) {
-                    jsonObject.addProperty("min", tierCondition.min());
-                    jsonObject.addProperty("max", tierCondition.max());
+                public <T> RecordBuilder<T> encode(TierCondition input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
+                    return prefix.add("min", ops.createInt(input.min()))
+                                 .add("max", ops.createInt(input.max()));
                 }
 
                 @Override
-                public @NotNull TierCondition deserialize(@NotNull JsonObject jsonObject, @NotNull JsonDeserializationContext jsonDeserializationContext) {
-                    int min = jsonObject.has("min") ? jsonObject.get("min").getAsInt() : 0;
-                    int max = jsonObject.has("max") ? jsonObject.get("max").getAsInt() : 9999;
-                    return new TierCondition(min, max);
+                public <T> DataResult<TierCondition> decode(DynamicOps<T> ops, MapLike<T> input) {
+                    // Using hashCode as a workaround for flatMap not being available
+                    int min, max;
+                    if (input.get("min") == null) min = 0;
+                    else min = ops.getNumberValue(input.get("min")).map(Number::intValue).result().orElse(0);
+
+                    if (input.get("max") == null) max = 9999;
+                    else max = ops.getNumberValue(input.get("max")).map(Number::intValue).result().orElse(9999);
+                    return DataResult.success(new TierCondition(min, max));
+                }
+
+                @Override
+                public <T> Stream<T> keys(DynamicOps<T> ops) {
+                    return Stream.of(ops.createString("min"), ops.createString("max"));
                 }
             }));
+
 
     /**
      * Register the loot conditions with the mod event bus.

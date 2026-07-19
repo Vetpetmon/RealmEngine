@@ -108,16 +108,17 @@ public abstract class RealmEngineAttributeMod {
     /**
      * Get the attribute registry name if available (for lazy-resolving mods).
      * Default implementation returns null.
+     *
      * @return ResourceLocation string or null
      */
-    public String getAttributeRegistryName() { return null; }
+    public ResourceLocation getAttributeRegistryName() { return null; }
 
     /** Create fixed mod by attribute registry name; resolves Attribute lazily. */
     public static RealmEngineAttributeMod createFixedModByAttributeName(String attributeRegistryName, Supplier<UUID> modifierId, Supplier<String> modifierName, Supplier<Double> amount) {
         return new RealmEngineAttributeMod(null, modifierId.get(), modifierName.get()) {
             public double getAmount() { return amount.get(); }
             public Attribute getAttribute() { return RealmEngineAttributeMod.getAttributeFromString(attributeRegistryName); }
-            public String getAttributeRegistryName() { return attributeRegistryName; }
+            public ResourceLocation getAttributeRegistryName() { return ResourceLocation.parse(attributeRegistryName); }
         };
     }
 
@@ -142,7 +143,7 @@ public abstract class RealmEngineAttributeMod {
         return new RealmEngineAttributeMod(null, modifierId.get(), modifierName.get(), AttributeModifier.Operation.ADD_MULTIPLIED_BASE) {
              public double getAmount() { return amount.get(); }
              public Attribute getAttribute() { return RealmEngineAttributeMod.getAttributeFromString(attributeRegistryName); }
-             public String getAttributeRegistryName() { return attributeRegistryName; }
+             public ResourceLocation getAttributeRegistryName() { return ResourceLocation.parse(attributeRegistryName); }
         };
     }
 
@@ -165,7 +166,7 @@ public abstract class RealmEngineAttributeMod {
         return new RealmEngineAttributeMod(null, modifierId.get(), modifierName.get(), AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL) {
              public double getAmount() { return amount.get(); }
              public Attribute getAttribute() { return RealmEngineAttributeMod.getAttributeFromString(attributeRegistryName); }
-             public String getAttributeRegistryName() { return attributeRegistryName; }
+             public ResourceLocation getAttributeRegistryName() { return ResourceLocation.parse(attributeRegistryName); }
         };
     }
 

@@ -3,9 +3,11 @@ package com.vetpetmon.realmengine.common.armor;
 import com.vetpetmon.realmengine.RealmEngine;
 import com.vetpetmon.realmengine.common.attribute.IRandomizedGear;
 import com.vetpetmon.realmengine.common.attribute.RealmEngineAttributeMod;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -205,7 +207,6 @@ public class ArmorPropertiesData {
         if (event.getItemStack().getEquipmentSlot() != armorItem.getEquipmentSlot()) return;
 
         CompoundTag tag = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
-        if (tag == null) return;
 
         // Read mod_item_id to find the ArmorMod definition for operation types
         String modItemId = null;
@@ -228,6 +229,7 @@ public class ArmorPropertiesData {
                 // Try to resolve the attribute from the mod name
                 var attribute = RealmEngineAttributeMod.getAttributeFromString(modName);
                 if (attribute == null) continue;
+                Holder<Attribute> attributeHolder = Holder.direct(attribute);
 
                 // Find the corresponding RealmfallAttributeMod to get operation type
                 AttributeModifier.Operation operation = getOperationByName(modName, armorMod);
@@ -237,7 +239,8 @@ public class ArmorPropertiesData {
                 String modifierName = "gear_mod_" + modName;
 
                 // Add the modifier to the event
-                event.addModifier(attribute, new AttributeModifier(ResourceLocation.fromNamespaceAndPath(RealmEngine.MODID,modifierName), amount, operation));
+                if (event.getItemStack().getEquipmentSlot() != null)
+                    event.addModifier(attributeHolder, new AttributeModifier(ResourceLocation.fromNamespaceAndPath(RealmEngine.MODID,modifierName), amount, operation), EquipmentSlotGroup.bySlot(event.getItemStack().getEquipmentSlot()));
             }
         }
 
@@ -264,7 +267,8 @@ public class ArmorPropertiesData {
                 String modifierName = "armor_mod_" + modName;
 
                 // Add the modifier to the event
-                event.addModifier(attribute, new AttributeModifier(modUuid, modifierName, amount, operation));
+                if (event.getItemStack().getEquipmentSlot() != null)
+                    event.addModifier(Holder.direct(attribute), new AttributeModifier(ResourceLocation.fromNamespaceAndPath(RealmEngine.MODID,modifierName), amount, operation), EquipmentSlotGroup.bySlot(event.getItemStack().getEquipmentSlot()));
             }
         }
     }
@@ -277,7 +281,8 @@ public class ArmorPropertiesData {
             if (modDef == null) {
                 // Also try to find by attribute registry name (fallback)
                 for (var effectMod : armorMod.getModEffects().values()) {
-                    if (modName.equals(effectMod.getAttributeRegistryName()) || modName.equals(effectMod.getModiName())) {
+                    effectMod.getAttributeRegistryName();
+                    if (modName.equals(effectMod.getModiName())) {
                         modDef = effectMod;
                         break;
                     }
@@ -306,47 +311,48 @@ public class ArmorPropertiesData {
         ItemStack stack = event.getItemStack();
 
         if (stack.getItem() instanceof IRandomizedGear gear) {
-            EquipmentSlot slot = event.getSlotType();
+            EquipmentSlot slot = event.getItemStack().getEquipmentSlot();
 
-            // If item is ArmorItem, only apply when slot matches armor slot (slot must be non-null)
-            if (stack.getItem() instanceof ArmorItem armorItem) {
-                if (slot != null && slot == armorItem.getEquipmentSlot()) {
-                    for (RealmEngineAttributeMod mod : gear.readModsFromStack(stack)) {
-                        // Defensive: some mods may be defined by name only and not yet resolve to an Attribute on the client.
-                        if (mod.getAttribute() == null) continue;
-                        UUID derived = IRandomizedGear.deriveInstanceUUID(mod, stack, slot);
-                        String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, slot);
-                        event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
-                    }
-                    for (RealmEngineAttributeMod mod : gear.readArmorModsForArmorItem(armorItem, stack)) {
-                        if (mod.getAttribute() == null) continue;
-                        UUID derived = IRandomizedGear.deriveInstanceUUID(mod, stack, slot);
-                        String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, slot);
-                        event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
-                    }
-                }
-            } else {
-                // Non-armor IRandomizedGear: if the item reports itself as a Curio, treat as curio (apply ONLY when actually equipped as a curio)
-                if (gear.isCurio()) {
-                    // Only apply curio modifiers when the event slot is null (curio context). This prevents modifiers
-                    // from being shown/applied for every equipment slot in inventory/tooltips.
-                    if (event.getSlotType() != null) return;
-
-                    for (RealmEngineAttributeMod mod : gear.readModsFromStack(stack)) {
-                        if (mod.getAttribute() == null) continue;
-                        UUID derived = IRandomizedGear.deriveInstanceUUID(mod, stack, null);
-                        String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, null);
-                        event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
-                    }
-                } else {
-                    // fallback: use provided slot (slot must be non-null)
-                    if (slot != null && slot == gear.getGearEquipmentSlot())
+            if (event.getItemStack().getEquipmentSlot() != null) {
+                // If item is ArmorItem, only apply when slot matches armor slot (slot must be non-null)
+                if (stack.getItem() instanceof ArmorItem armorItem) {
+                    if (slot != null && slot == armorItem.getEquipmentSlot()) {
                         for (RealmEngineAttributeMod mod : gear.readModsFromStack(stack)) {
+                            // Defensive: some mods may be defined by name only and not yet resolve to an Attribute on the client.
                             if (mod.getAttribute() == null) continue;
                             UUID derived = IRandomizedGear.deriveInstanceUUID(mod, stack, slot);
                             String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, slot);
-                            event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
+//                            event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation())); // Not compatible with NeoForge 1.21.1
+                            event.addModifier(Holder.direct(mod.getAttribute()), new AttributeModifier(ResourceLocation.fromNamespaceAndPath(RealmEngine.MODID, derivedName), mod.getAmount(), mod.getOperation()), EquipmentSlotGroup.bySlot(slot));
                         }
+                        for (RealmEngineAttributeMod mod : gear.readArmorModsForArmorItem(armorItem, stack)) {
+                            if (mod.getAttribute() == null) continue;
+                            UUID derived = IRandomizedGear.deriveInstanceUUID(mod, stack, slot);
+                            String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, slot);
+                            event.addModifier(Holder.direct(mod.getAttribute()), new AttributeModifier(ResourceLocation.fromNamespaceAndPath(RealmEngine.MODID, derivedName), mod.getAmount(), mod.getOperation()), EquipmentSlotGroup.bySlot(slot));
+                        }
+                    }
+                } else {
+                    // Non-armor IRandomizedGear: if the item reports itself as a Curio, treat as curio (apply ONLY when actually equipped as a curio)
+                    if (gear.isCurio()) {
+                        // Only apply curio modifiers when the event slot is null (curio context). This prevents modifiers
+                        // from being shown/applied for every equipment slot in inventory/tooltips.
+                        for (RealmEngineAttributeMod mod : gear.readModsFromStack(stack)) {
+                            if (mod.getAttribute() == null) continue;
+                            UUID derived = IRandomizedGear.deriveInstanceUUID(mod, stack, null);
+                            String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, null);
+                            event.addModifier(Holder.direct(mod.getAttribute()), new AttributeModifier(ResourceLocation.fromNamespaceAndPath(RealmEngine.MODID, derivedName), mod.getAmount(), mod.getOperation()), EquipmentSlotGroup.bySlot(slot));
+                        }
+                    } else {
+                        // fallback: use provided slot (slot must be non-null)
+                        if (slot != null && slot == gear.getGearEquipmentSlot())
+                            for (RealmEngineAttributeMod mod : gear.readModsFromStack(stack)) {
+                                if (mod.getAttribute() == null) continue;
+                                UUID derived = IRandomizedGear.deriveInstanceUUID(mod, stack, slot);
+                                String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, slot);
+                                event.addModifier(Holder.direct(mod.getAttribute()), new AttributeModifier(ResourceLocation.fromNamespaceAndPath(RealmEngine.MODID, derivedName), mod.getAmount(), mod.getOperation()), EquipmentSlotGroup.bySlot(slot));
+                            }
+                    }
                 }
             }
 
@@ -378,32 +384,19 @@ public class ArmorPropertiesData {
 
                         for (RealmEngineAttributeMod mod : mods.values()) {
                             // Resolve attribute lazily if necessary
-                            Attribute attribute = mod.getAttribute();
-                            if (attribute == null) {
-                                String regName = mod.getAttributeRegistryName();
-                                if (regName != null) attribute = RealmEngineAttributeMod.getAttributeFromString(regName);
-                            }
-                            if (attribute == null || player.getAttribute(attribute) == null) continue;
+                            Holder<Attribute> attribute = Holder.direct(mod.getAttribute());
+                            if (player.getAttribute(attribute) == null) continue;
                             AttributeInstance instance = player.getAttribute(attribute);
-                            assert instance != null; // Should never be null here due to checks above
-
-                            // Build deterministic per-player modifier UUID so we can remove later
-                            UUID derived = derivePlayerModifierUUID(mod, player, props, effect);
-                            String derivedName = derivePlayerModifierName(mod, player, props, effect);
-
-                            if (hasFullSet) {
+                            if (hasFullSet && instance != null) {
                                 // Apply modifier if missing or different value
-                                AttributeModifier existing = instance.getModifier(derived);
-                                if (existing == null || Double.compare(existing.amount(), mod.getAmount()) != 0 || existing.operation() != mod.getOperation()) {
-                                    // remove any stale modifier and add new transient one
-                                    instance.removeModifier(derived);
-                                    instance.addTransientModifier(new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
+                                if (!instance.hasModifier(mod.getAttributeRegistryName())) { // must be resource-location based modifier, not UUID based
+                                    instance.addTransientModifier(mod.createModifier());
                                     try { mod.onAttributeUpdate(player); } catch (Exception ignored) {}
                                 }
-                            } else {
+                            } else if (instance != null) {
                                 // Remove modifier if present
-                                if (instance.getModifier(derived) != null) {
-                                    instance.removeModifier(derived);
+                                if (instance.hasModifier(mod.getAttributeRegistryName())) {
+                                    instance.removeModifier(mod.getAttributeRegistryName());
                                     try { mod.onAttributeUpdate(player); } catch (Exception ignored) {}
                                 }
                             }

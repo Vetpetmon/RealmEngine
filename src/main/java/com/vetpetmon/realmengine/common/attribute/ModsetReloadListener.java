@@ -180,7 +180,7 @@ public class ModsetReloadListener extends SimpleJsonResourceReloadListener {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server != null) {
             for (ServerPlayer player : server.getPlayerList().getPlayers())
-                PacketDistributor.sendToPlayer(player, new SyncModsetsPacket(ModsetData.MODSETS));
+                PacketDistributor.sendToPlayer(player, new SyncModsetsPacket(ModsetData.MODSETS)); // FIXME: Update to Neoforge 1.21.1 networking system
             RealmEngine.LOGGER.info("Synced modsets to {} connected players", server.getPlayerList().getPlayerCount());
         }
     }
