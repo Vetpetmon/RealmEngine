@@ -9,6 +9,7 @@ import com.vetpetmon.realmengine.common.armor.ArmorPropertiesData;
 import com.vetpetmon.realmengine.common.armor.ArmorPropertiesReloadListener;
 import com.vetpetmon.realmengine.common.attribute.ModsetData;
 import com.vetpetmon.realmengine.common.attribute.ModsetReloadListener;
+import com.vetpetmon.realmengine.common.item.HammerItem;
 import com.vetpetmon.realmengine.common.item.ItemPropertiesData;
 import com.vetpetmon.realmengine.common.item.ItemPropertiesReloadListener;
 import com.vetpetmon.realmengine.common.metaworld.Metaworld;
@@ -18,8 +19,12 @@ import com.vetpetmon.realmengine.common.networking.SyncArmorPropertiesPacket;
 import com.vetpetmon.realmengine.common.networking.SyncItemPropertiesPacket;
 import com.vetpetmon.realmengine.common.networking.SyncModsetsPacket;
 import com.vetpetmon.realmengine.common.tiering.loot.LootConditions;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Tier;
 import net.minecraft.world.level.GameRules;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.MinecraftForge;
@@ -63,6 +68,10 @@ public class RealmEngine {
     public static final CommonConfig commonConfig;
     public static final ForgeConfigSpec serverConfigSpec;
 
+    public static final TagKey<Item> HAMMERS = registerItemTag("hammers");
+    private static TagKey<Item> registerItemTag(String name) {
+        return TagKey.create(Registries.ITEM, RealmEngine.createRL(name));
+    }
     static {
         final Pair<CommonConfig, ForgeConfigSpec> specPairCommon = new ForgeConfigSpec.Builder().configure(CommonConfig::new);
         serverConfigSpec = specPairCommon.getRight();
@@ -156,4 +165,9 @@ public class RealmEngine {
      * @return ResourceLocation with modID:path
      */
     public static ResourceLocation createRL(String path) {return ResourceLocation.fromNamespaceAndPath(MODID, path);}
+
+
+    public static HammerItem newHammer(Tier tier) {
+        return new HammerItem(tier, 8,-2.9f, new Item.Properties().stacksTo(1), 0);
+    }
 }

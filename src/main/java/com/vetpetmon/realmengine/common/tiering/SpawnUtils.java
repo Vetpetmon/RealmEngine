@@ -181,10 +181,15 @@ public class SpawnUtils {
 
         // Get the base tier multiplier using the configured scaling mode
         double tierMultiplier = tierMultiplierFromConfig(tier);
-        
-        double healthMultiplier = CommonConfig.healthMultiplierPerTier.get();
-        double attackMultiplier = CommonConfig.attackMultiplierPerTier.get();
-        double armorMultiplier = CommonConfig.armorMultiplierPerTier.get();
+
+        if (CommonConfig.tierJumpingEnabled.get()) {
+            // for every x tiers, add the tier multiplier again (staircase effect)
+            int jumpThreshold = CommonConfig.tierJumpThreshold.get();
+            int jumps = Math.floorDiv(tier, jumpThreshold); // Integer division to get the number of jumps, example: tier 25 with threshold 10 = 2 jumps
+            tierMultiplier *= (1 + (CommonConfig.tierJumpMultiplier.get() * jumps)); // Additive effect for each jump
+            // For graphing in DESMOS:
+            // y = (log1p(x/5)/log1p(10/5) + 1) * (z + floor(x/10))
+        }
 
         // Scale health (always exists)
         var healthAttr = entity.getAttribute(Attributes.MAX_HEALTH);

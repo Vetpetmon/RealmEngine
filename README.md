@@ -96,7 +96,7 @@ Properties are supplied upon datapack reload and are stored in a map, allowing f
 No notable change in datapack reload times have been observed. Memory overhead is too miniscule for it to matter.
 
 Set effects are attribute modifiers applied via the `LivingEquipmentChangeEvent` subscriber.
-In Forge's own words, _"LivingEquipmentChangeEvent is fired when the Equipment of a Entity changes.
+In Forge's own words, _"LivingEquipmentChangeEvent is fired when the Equipment of an Entity changes.
 This event is fired whenever changes in Equipment are detected in LivingEntity.tick().
 This also includes entities joining the World, as well as being cloned.
 This event is fired on server-side only."_
@@ -183,6 +183,53 @@ Base JSON schema:
 }
 ```
 
+## Hammertime & Oversized Tools:
+As of Realmengine v4.0, Hammertime has been merged into RealmEngine. 
+While it is up to *individual mods* to implement the features of Hammertime, RealmEngine provides the core functionality for oversized tools and weapons.
+
+
+### Adding Your Own Hammers
+(Mod devs)
+
+*This guide implies you already have a tool tier defined in your mod and item registration subscribed to.*
+
+Adding your own hammers is quite easy, we'll start by defining our custom hammer in our item registries:
+```java
+public static final RegistryObject<Item>
+        CUSTOM_HAMMER =  ITEMS.register("custom_hammer",  () -> RealmEngine.newHammer(Tiers.CUSTOM_TIER));
+```
+Alternatively, you can create a new hammer directly:
+```java
+public static final RegistryObject<Item>
+        CUSTOM_HAMMER =  ITEMS.register("custom_hammer",  () -> new HammerItem(tier, 8,-2.9f, new Item.Properties().stacksTo(1), 0)); //Modify that last int if you want to go beyond 3x3 mining
+```
+It's recommended to handle these registries on a conditional statement that checks if 
+***RealmEngine*** is loaded.
+
+Now, it is registered into the game, but we aren't done yet! 
+In your mod's datapack folder, create a folder named `weapon_attributes`, 
+and create a file inside of it named `custom_hammer.json`, with the following contents:
+```json
+{
+    "parent": "realmengine:hammer"
+}
+```
+***Hammertime!*** provides a combo for Hammer-type weapons for Better Combat.
+
+Once these are done, you can use datagen or manually create the item model 
+in your mod's assets folder, using the `heldhammer` as a parent model.
+```json
+{
+  "parent": "realmengine:item/heldhammer",
+  "textures": {
+    "layer0": "mymod:item/custom_hammer"
+  }
+}
+```
+Now, all that is left is a lang file entry, 
+adding it to the `realmengine:hammers` tag (Which gets added to `minecraft:pickaxes` automatically), 
+and adding in your texture. 
+It's that easy and painless!
 
 # Modpage description
 ## RealmEngine - The Core Library of Realmfall.
@@ -197,10 +244,13 @@ RealmEngine is free to use, released for the whole of the Minecraft 1.20.1 moddi
 Our gift, to you.
 
 Features:
+- Configurable! Great for modpacks!
 - Armor Mods (Improve your gear using custom-defined modifiers and items.)
 - Random Gear Mods (Each piece of armor is uniquely stronger/weaker than its base form! WIP: curios, and tools/weapons)
 - Armor Set Effects (Wearing a full set of armor provides additional benefits!)
 - WIP: Metaworld (A simulation outside of the simulation, a performant way to breathe life beyond the loaded chunks)
 - Bugfixes (Fixes crashes caused by unsafe multithreading)
+- Mob stat tiering (Not enabled by default as of 4.0)
+- Hammers
 
 FastNoiseLite v1.1.1 is licensed under the MIT License and included in RealmEngine.

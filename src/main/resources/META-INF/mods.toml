@@ -17,7 +17,7 @@ license="GNU GPLv3"
 # The modid of the mod
 modId="realmengine" #mandatory
 # The version number of the mod
-version="3.1.7" #mandatory
+version="4.0.0" #mandatory
 # A display name for the mod
 displayName="RealmEngine" #mandatory
 # A URL to query for updates for this mod. See the JSON update specification https://docs.minecraftforge.net/en/latest/misc/updatechecker/
@@ -56,6 +56,7 @@ Features:
 > Armor Set Effects (Wearing a full set of armor provides additional benefits!)
 > WIP: Metaworld (A simulation outside of the simulation, a performant way to breathe life beyond the loaded chunks)
 > Tiered mobs!
+> Hammers!
 
 FastNoiseLite v1.1.1 is licensed under the MIT License and included in RealmEngine.'''
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.

@@ -4,8 +4,8 @@ import net.minecraftforge.common.ForgeConfigSpec;
 
 public class CommonConfig {
 
-    public static ForgeConfigSpec.IntValue noTieringZoneRadius, distancePerTier;
-    public static ForgeConfigSpec.DoubleValue healthMultiplierPerTier, attackMultiplierPerTier, armorMultiplierPerTier, primarySkillMultiplierPerTier, secondarySkillMultiplierPerTier, logBase;
+    public static ForgeConfigSpec.IntValue noTieringZoneRadius, distancePerTier, tierJumpThreshold;
+    public static ForgeConfigSpec.DoubleValue healthMultiplierPerTier, attackMultiplierPerTier, armorMultiplierPerTier, primarySkillMultiplierPerTier, secondarySkillMultiplierPerTier, logBase, tierJumpMultiplier;
     // Enum for scaling mode (log, exponential, linear)
     public enum ScalingMode {
         LOGARITHMIC,
@@ -13,7 +13,7 @@ public class CommonConfig {
         LINEAR
     }
     public static ForgeConfigSpec.EnumValue<ScalingMode> scalingMode;
-    public static ForgeConfigSpec.BooleanValue disableNetherPortal, disableEndPortal, tieringEnabled;
+    public static ForgeConfigSpec.BooleanValue disableNetherPortal, disableEndPortal, tieringEnabled, tierJumpingEnabled;
 
     public CommonConfig(ForgeConfigSpec.Builder builder) {
         // DAM stopped working for us, so we wrote our own dimensional access system.
@@ -28,8 +28,8 @@ public class CommonConfig {
 
         builder.push("Tiered Mobs");
         tieringEnabled = builder
-                .comment("Enable tiered mob scaling based on distance from world spawn. Default is true.")
-                .define("tieringEnabled", true);
+                .comment("Enable tiered mob scaling based on distance from world spawn. Default is false.")
+                .define("tieringEnabled", false);
         noTieringZoneRadius = builder
             .comment("Distance before tiering starts, to make starting areas far less dangerous. Default is 500.")
             .defineInRange("noTieringZoneRadius", 500, 1, 1000);
@@ -57,6 +57,15 @@ public class CommonConfig {
         logBase = builder
                 .comment("Base for logarithmic scaling (if LOGARITHMIC mode is selected). Default is 2.0.")
                 .defineInRange("logBase", 5.0, 1, 100.0);
+        tierJumpingEnabled = builder
+                .comment("Enable tier jumping, for every x tiers, tiering will re-apply itself (additive), creating a staircase-like effect when graphed. Default is false.")
+                .define("tierJumpingEnabled", false);
+        tierJumpThreshold = builder
+                .comment("Every x tiers, tiering will re-apply itself (additive), creating a staircase-like effect when graphed. Default is 10.")
+                .defineInRange("tierJumpThreshold", 10, 1, 100);
+        tierJumpMultiplier = builder
+                .comment("Multiplier for tier jumping. Default is 0.5 (50% increase per jump).")
+                .defineInRange("tierJumpMultiplier", 0.5, 0.0, 10.0);
         builder.pop();
     }
 }
