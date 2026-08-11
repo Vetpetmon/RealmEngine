@@ -5,6 +5,9 @@
 	"package": "com.vetpetmon.realmengine.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"minVersion": "0.8",
+	"mixinextras": {
+		"minVersion": "0.5.4"
+	},
 	"mixins": [
 		"AbstractContainerScreenAccessor",
 		"MixinPersistentEntitySectionManager",

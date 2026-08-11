@@ -7,19 +7,31 @@ import net.minecraft.world.effect.MobEffectInstance;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(MobEffectInstance.class)
 public class MobEffectInstancePause implements IPausableEffect {
     @Shadow private int duration;
 
-    /**
-     * Wraps the tickDownDuration method to check if the duration is paused. If it is, the duration will not decrease.
-     * @param original the original tickDownDuration method
-     * @return the original duration if not paused, otherwise the current duration
-     */
-    @WrapMethod(method = "tickDownDuration")
-    int realmengine$wrapTickDownDuration(Operation<Integer> original) {
-        return (!this.realmengine$getDurationPaused()) ? original.call() : this.duration;
+//    /**
+//     * Wraps the tickDownDuration method to check if the duration is paused. If it is, the duration will not decrease.
+//     * @param original the original tickDownDuration method
+//     * @return the original duration if not paused, otherwise the current duration
+//     */
+//    @WrapMethod(method = "tickDownDuration" )
+//    int realmengine$wrapTickDownDuration(Operation<Integer> original) {
+//        return (!this.realmengine$getDurationPaused()) ? original.call() : this.duration;
+//    }
+
+//            // Inject at head of the tickDownDuration method to check if the duration is paused. If it is, the duration will not decrease.
+    @Inject(method = "tickDownDuration", at = @At("HEAD"), cancellable = true)
+    void realmengine$injectTickDownDuration(CallbackInfoReturnable<Integer> cir) {
+        if (this.realmengine$getDurationPaused()) {
+            cir.setReturnValue(this.duration);
+        }
     }
 
     @Unique boolean realmengine$durationPaused = false;
