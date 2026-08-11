@@ -8,10 +8,25 @@ A library mod primarily made for Realmfall.
 
 Most functionality seen here was originally hard-coded features in Realmfall, previously requiring Java code to implement.
 RealmEngine is the JSON-ification of Realmfall's preivously Java-based features, allowing for more flexibility and
-accessibility for modders and datapack makers alike,
-not just Realmfall developers.
+accessibility for modders and datapack makers alike, not just Realmfall developers. 
+We've even included APIs such as our pausable potion effects for public use!
 
 Datapacks are universal and are more proofed against up-ports or major point-version changes.
+
+## Pausable Status Effects (Java)
+Via the `IPausableEffect` interface, status effects can be paused and resumed at will. 
+
+Example usage:
+```java
+public void applyEffectTick(LivingEntity entity, int tick) {
+    ((IPausableEffect) entity.getEffect(this))
+            .realmengine$setDurationPaused(entity.hasEffect(ModEffects.GENE_SHUFFLE_PAUSE.get()));
+    super.applyEffectTick(entity, tick);
+}
+```
+This pauses the duration countdown of the effect when the entity has the `GENE_SHUFFLE_PAUSE` effect, and resumes it when the entity no longer has that effect.
+
+Credits: Nischi & Modoromu
 
 ## Bugfixes:
 
@@ -34,8 +49,6 @@ data/
 ```
 
 ### Documentation
-
-**The Mixin to apply armor modifiers via inventory GUI may fail to work on certain modpack setups.**
 
 Base JSON schema:
 ```json
@@ -248,9 +261,10 @@ Features:
 - Armor Mods (Improve your gear using custom-defined modifiers and items.)
 - Random Gear Mods (Each piece of armor is uniquely stronger/weaker than its base form! WIP: curios, and tools/weapons)
 - Armor Set Effects (Wearing a full set of armor provides additional benefits!)
-- WIP: Metaworld (A simulation outside of the simulation, a performant way to breathe life beyond the loaded chunks)
+- WIP: Metaworld (A simulation outside the simulation, a performant way to breathe life beyond the loaded chunks)
 - Bugfixes (Fixes crashes caused by unsafe multithreading)
 - Mob stat tiering (Not enabled by default as of 4.0)
 - Hammers
+- Pausable potion effects (Programmable!)
 
 FastNoiseLite v1.1.1 is licensed under the MIT License and included in RealmEngine.
