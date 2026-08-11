@@ -181,3 +181,12 @@ tasks.named('jar', Jar).configure {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
+
+// With the build task, create source and javadoc jars for publishing to a maven repository
+tasks.named('build').configure {
+    dependsOn 'sourcesJar'
+}
+tasks.register('sourcesJar', Jar) {
+    from sourceSets.main.allSource
+    archiveClassifier.set('sources')
+}
