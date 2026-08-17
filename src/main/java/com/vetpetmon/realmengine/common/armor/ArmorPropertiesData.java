@@ -14,6 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.ItemAttributeModifierEvent;
 import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -231,7 +232,8 @@ public class ArmorPropertiesData {
                 AttributeModifier.Operation operation = getOperationByName(modName, armorMod);
 
                 // Build a unique UUID for this modifier on this specific item
-                UUID modUuid = deriveGearModifierUUID(stack, modName);
+                UUID modUuid = deriveItemModifierUUID(stack, event.getSlotType(), "gear_mods", modName, gearMods);
+//                UUID modUuid = deriveGearModifierUUID(stack, modName);
                 String modifierName = "gear_mod_" + modName;
 
                 // Add the modifier to the event
@@ -239,7 +241,7 @@ public class ArmorPropertiesData {
             }
         }
 
-        // Part 2: Apply armor mod piece modifiers from armor_mods
+        // Part 2: Apply armor mod piece modifiers from armor_mods (legacy 1.x support)
         if (tag.contains("armor_mods")) {
             CompoundTag armorMods = tag.getCompound("armor_mods");
             for (String modName : armorMods.getAllKeys()) {
@@ -258,7 +260,8 @@ public class ArmorPropertiesData {
                 AttributeModifier.Operation operation = effectMod != null ? effectMod.getOperation() : AttributeModifier.Operation.ADDITION;
 
                 // Build a unique UUID for this modifier
-                UUID modUuid = deriveGearModifierUUID(stack, "armor_mod_" + modName);
+//                UUID modUuid = deriveGearModifierUUID(stack, "armor_mod_" + modName);
+                UUID modUuid = deriveItemModifierUUID(stack, event.getSlotType(), "armor_mods", modName, armorMods);
                 String modifierName = "armor_mod_" + modName;
 
                 // Add the modifier to the event
@@ -298,6 +301,20 @@ public class ArmorPropertiesData {
         return UUID.nameUUIDFromBytes(base.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Derive a deterministic UUID for a gear modifier on a specific item stack
+     * Uses item description ID and attribute key to ensure uniqueness
+     */
+    private static UUID deriveItemModifierUUID(ItemStack stack, EquipmentSlot slot, String category, String attrKey, CompoundTag modifierData) {
+        var itemKey = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        String base = (itemKey != null ? itemKey.toString() : stack.getItem().getDescriptionId())
+                + "|" + (slot != null ? slot.name() : "NULL")
+                + "|" + category
+                + "|" + attrKey
+                + "|" + (modifierData != null ? modifierData.toString() : "");
+        return UUID.nameUUIDFromBytes(base.getBytes(StandardCharsets.UTF_8));
+    }
+
     @SubscribeEvent
     public void gearAttributeMods(ItemAttributeModifierEvent event) {
 
@@ -316,6 +333,7 @@ public class ArmorPropertiesData {
                         String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, slot);
                         event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
                     }
+                    // Additionally, apply any armor-specific mods defined for this armor item
                     for (RealmEngineAttributeMod mod : gear.readArmorModsForArmorItem(armorItem, stack)) {
                         if (mod.getAttribute() == null) continue;
                         UUID derived = IRandomizedGear.deriveInstanceUUID(mod, stack, slot);
@@ -323,6 +341,8 @@ public class ArmorPropertiesData {
                         event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
                     }
                 }
+                // Do not apply any other modifiers for this item in other slots
+                return;
             } else {
                 // Non-armor IRandomizedGear: if the item reports itself as a Curio, treat as curio (apply ONLY when actually equipped as a curio)
                 if (gear.isCurio()) {
@@ -336,16 +356,22 @@ public class ArmorPropertiesData {
                         String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, null);
                         event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
                     }
-                } else {
-                    // fallback: use provided slot (slot must be non-null)
-                    if (slot != null && slot == gear.getGearEquipmentSlot())
-                        for (RealmEngineAttributeMod mod : gear.readModsFromStack(stack)) {
-                            if (mod.getAttribute() == null) continue;
-                            UUID derived = IRandomizedGear.deriveInstanceUUID(mod, stack, slot);
-                            String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, slot);
-                            event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
-                        }
+                    return;
                 }
+            }
+
+            // Do not apply any modifiers if the event slot does not match the gear's defined equipment slot
+            if (slot == null || slot != gear.getGearEquipmentSlot()) return;
+
+            var gearModsTag = stack.getTag() != null && stack.getTag().contains(IRandomizedGear.MODS_TAG)
+                    ? stack.getTag().getCompound(IRandomizedGear.MODS_TAG)
+                    : null;
+
+            for (RealmEngineAttributeMod mod : gear.readModsFromStack(stack)) {
+                if (mod.getAttribute() == null) continue;
+                UUID derived = deriveItemModifierUUID(stack, slot, IRandomizedGear.MODS_TAG, mod.getModiName(), gearModsTag);
+                String derivedName = IRandomizedGear.deriveInstanceName(mod, stack, slot);
+                event.addModifier(mod.getAttribute(), new AttributeModifier(derived, derivedName, mod.getAmount(), mod.getOperation()));
             }
 
         }
