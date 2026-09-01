@@ -14,10 +14,7 @@ import com.vetpetmon.realmengine.common.item.ItemPropertiesData;
 import com.vetpetmon.realmengine.common.item.ItemPropertiesReloadListener;
 import com.vetpetmon.realmengine.common.metaworld.Metaworld;
 import com.vetpetmon.realmengine.common.metaworld.data.QuizDB;
-import com.vetpetmon.realmengine.common.networking.ApplyArmorModToSlotPacket;
-import com.vetpetmon.realmengine.common.networking.SyncArmorPropertiesPacket;
-import com.vetpetmon.realmengine.common.networking.SyncItemPropertiesPacket;
-import com.vetpetmon.realmengine.common.networking.SyncModsetsPacket;
+import com.vetpetmon.realmengine.common.networking.*;
 import com.vetpetmon.realmengine.common.tiering.loot.LootConditions;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -38,9 +35,11 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
@@ -121,6 +120,22 @@ public class RealmEngine {
         PACKET_HANDLER.registerMessage(packetID++, SyncArmorPropertiesPacket.class, SyncArmorPropertiesPacket::encode, SyncArmorPropertiesPacket::decode, SyncArmorPropertiesPacket::handle);
         PACKET_HANDLER.registerMessage(packetID++, SyncItemPropertiesPacket.class, SyncItemPropertiesPacket::encode, SyncItemPropertiesPacket::decode, SyncItemPropertiesPacket::handle);
         PACKET_HANDLER.registerMessage(packetID++, SyncModsetsPacket.class, SyncModsetsPacket::encode, SyncModsetsPacket::decode, SyncModsetsPacket::handle);
+        PACKET_HANDLER.registerMessage(packetID++, EntityHitboxPacket.class, EntityHitboxPacket::write, EntityHitboxPacket::read, EntityHitboxPacket::handle);
+    }
+
+    // Send packet to server
+    public static void sendPacketToServer(Object packet) {
+        PACKET_HANDLER.sendToServer(packet);
+    }
+    // Send packet to all players
+    public static void sendPacketToAllPlayers(Object packet) {
+        for (ServerPlayer player : ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayers()) {
+            sendPacketToPlayer(player, packet);
+        }
+    }
+    // Send packet to a specific player
+    public static void sendPacketToPlayer(ServerPlayer player, Object packet) {
+        PACKET_HANDLER.sendTo(packet, player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
     }
 
     // Register reload listeners (datapack-driven articles)

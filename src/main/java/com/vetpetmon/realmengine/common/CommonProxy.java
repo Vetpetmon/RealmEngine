@@ -1,6 +1,7 @@
 package com.vetpetmon.realmengine.common;
 
 import com.vetpetmon.realmengine.RealmEngine;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.Calendar;
 
@@ -30,5 +31,10 @@ public class CommonProxy {
             case Calendar.SATURDAY -> RealmEngine.Weekday.SATURDAY;
             default -> RealmEngine.Weekday.SUNDAY; // Fallback
         };
+    }
+
+    //Get clientside player, will be null on server side
+    public Player getClientPlayer() {
+        return null;
     }
 }
