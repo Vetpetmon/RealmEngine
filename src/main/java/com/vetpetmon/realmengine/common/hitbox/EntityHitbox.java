@@ -22,7 +22,31 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+@SuppressWarnings("unused")
 public class EntityHitbox extends PartEntity<Mob> {
+
+    // Enum for direction in radians.
+    public enum Direction {
+        WEST(0.0f),
+        NORTH_WEST(0.8f),
+        NORTH(1.6f),
+        NORTH_EAST(2.4f),
+        EAST(3.2f),
+        SOUTH_EAST(-2.4f),
+        SOUTH(-1.6f),
+        SOUTH_WEST(-0.8f)
+        ;
+
+        private final float angle;
+
+        Direction(float angle) {
+            this.angle = angle;
+        }
+
+        public float getAngle() {
+            return angle;
+        }
+    }
 
 
     private EntityDimensions size;
