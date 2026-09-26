@@ -204,5 +204,5 @@ FastNoiseLite v1.1.1 is licensed under the MIT License and included in RealmEngi
 
 # Credits:
 
-Modoromu (Lead dev)
-Nischi  (Bugfixing and documentation proofreading)
+- Modoromu (Lead dev)
+- Nischi  (Bugfixing and documentation proofreading)
