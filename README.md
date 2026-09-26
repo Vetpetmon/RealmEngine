@@ -4,7 +4,7 @@ _"Mo gives us convenience, but they also curse us with it being in JSON and C." 
 
 _"WE ARE SANE MOD DEVELOPERS" - Modoromu_
 
-A library mod primarily made for Realmfall.
+A library mod primarily made for Realmfall, but the functionalities can by used by anyone.
 
 Most functionality seen here was originally hard-coded features in Realmfall, previously requiring Java code to implement.
 RealmEngine is the JSON-ification of Realmfall's preivously Java-based features, allowing for more flexibility and
@@ -12,21 +12,6 @@ accessibility for modders and datapack makers alike, not just Realmfall develope
 We've even included APIs such as our pausable potion effects for public use!
 
 Datapacks are universal and are more proofed against up-ports or major point-version changes.
-
-## Pausable Status Effects (Java)
-Via the `IPausableEffect` interface, status effects can be paused and resumed at will. 
-
-Example usage:
-```java
-public void applyEffectTick(LivingEntity entity, int tick) {
-    ((IPausableEffect) entity.getEffect(this))
-            .realmengine$setDurationPaused(entity.hasEffect(ModEffects.GENE_SHUFFLE_PAUSE.get()));
-    super.applyEffectTick(entity, tick);
-}
-```
-This pauses the duration countdown of the effect when the entity has the `GENE_SHUFFLE_PAUSE` effect, and resumes it when the entity no longer has that effect.
-
-Credits: Nischi & Modoromu
 
 ## Bugfixes:
 
@@ -196,54 +181,6 @@ Base JSON schema:
 }
 ```
 
-## Hammertime & Oversized Tools:
-As of Realmengine v4.0, Hammertime has been merged into RealmEngine. 
-While it is up to *individual mods* to implement the features of Hammertime, RealmEngine provides the core functionality for oversized tools and weapons.
-
-
-### Adding Your Own Hammers
-(Mod devs)
-
-*This guide implies you already have a tool tier defined in your mod and item registration subscribed to.*
-
-Adding your own hammers is quite easy, we'll start by defining our custom hammer in our item registries:
-```java
-public static final RegistryObject<Item>
-        CUSTOM_HAMMER =  ITEMS.register("custom_hammer",  () -> RealmEngine.newHammer(Tiers.CUSTOM_TIER));
-```
-Alternatively, you can create a new hammer directly:
-```java
-public static final RegistryObject<Item>
-        CUSTOM_HAMMER =  ITEMS.register("custom_hammer",  () -> new HammerItem(tier, 8,-2.9f, new Item.Properties().stacksTo(1), 0)); //Modify that last int if you want to go beyond 3x3 mining
-```
-It's recommended to handle these registries on a conditional statement that checks if 
-***RealmEngine*** is loaded.
-
-Now, it is registered into the game, but we aren't done yet! 
-In your mod's datapack folder, create a folder named `weapon_attributes`, 
-and create a file inside of it named `custom_hammer.json`, with the following contents:
-```json
-{
-    "parent": "realmengine:hammer"
-}
-```
-***Hammertime!*** provides a combo for Hammer-type weapons for Better Combat.
-
-Once these are done, you can use datagen or manually create the item model 
-in your mod's assets folder, using the `heldhammer` as a parent model.
-```json
-{
-  "parent": "realmengine:item/heldhammer",
-  "textures": {
-    "layer0": "mymod:item/custom_hammer"
-  }
-}
-```
-Now, all that is left is a lang file entry, 
-adding it to the `realmengine:hammers` tag (Which gets added to `minecraft:pickaxes` automatically), 
-and adding in your texture. 
-It's that easy and painless!
-
 # Modpage description
 ## RealmEngine - The Core Library of Realmfall.
 Disclaimer: RealmEngine doesn't do much out of the box, some datapack assembly required. Curios is required as compatibility with it is projected for 4.0 release.
@@ -268,3 +205,8 @@ Features:
 - Pausable potion effects (Programmable!)
 
 FastNoiseLite v1.1.1 is licensed under the MIT License and included in RealmEngine.
+
+# Credits:
+
+Modoromu (Lead dev)
+Nischi  (Bugfixing and documentation proofreading)
