@@ -13,10 +13,6 @@ We've even included APIs such as our pausable potion effects for public use!
 
 Datapacks are universal and are more proofed against up-ports or major point-version changes.
 
-## Bugfixes:
-
-- PersistentEntitySectionManager: Fixed strange AIOOBE server crashes caused by other mods accessing data from off-threads by using unsafe multithreading.
-
 ## Armor Properties
 
 A datapack-based system to apply set effects, randomized mods, and applicable armor modifiers to armors.
