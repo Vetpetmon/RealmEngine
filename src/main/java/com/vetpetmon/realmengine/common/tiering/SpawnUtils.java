@@ -7,6 +7,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 
 import java.util.Objects;
@@ -165,6 +167,8 @@ public class SpawnUtils {
         };
     }
 
+    // ==================== IMPLEMENTATION ====================
+
     /**
      * Apply config-based scaling to all standard attributes of an entity.
      * Uses current attribute values as base and applies multipliers from config.
@@ -192,54 +196,44 @@ public class SpawnUtils {
         }
 
         // Scale health (always exists)
-        var healthAttr = entity.getAttribute(Attributes.MAX_HEALTH);
-        if (healthAttr != null) {
-            // Use the attribute's base value (original base) instead of the current effective value
-            double baseHealth = healthAttr.getBaseValue();
-            double scaledHealth = baseHealth * CommonConfig.healthMultiplierPerTier.get() * tierMultiplier;
-            healthAttr.setBaseValue(scaledHealth);
-            entity.setHealth((float) Math.min(entity.getHealth(), scaledHealth));
-        }
+        processAndAddModifier(entity, Attributes.MAX_HEALTH, "realmengine_health_scaling", CommonConfig.healthMultiplierPerTier.get() * tierMultiplier);
+        entity.setHealth(entity.getMaxHealth()); // Reset health to max after scaling
 
         // Scale attack damage (may not exist for all entities)
-        var attackAttr = entity.getAttribute(Attributes.ATTACK_DAMAGE);
-        if (attackAttr != null) {
-            double baseAttack = attackAttr.getBaseValue();
-            double scaledAttack = baseAttack * CommonConfig.attackMultiplierPerTier.get() * tierMultiplier;
-            attackAttr.setBaseValue(scaledAttack);
-        }
+        processAndAddModifier(entity, Attributes.ATTACK_DAMAGE, "realmengine_attack_scaling", CommonConfig.attackMultiplierPerTier.get() * tierMultiplier);
 
         // Scale armor (may not exist for all entities)
-        var armorAttr = entity.getAttribute(Attributes.ARMOR);
-        if (armorAttr != null) {
-            double baseArmor = armorAttr.getBaseValue();
-            double scaledArmor = baseArmor * CommonConfig.armorMultiplierPerTier.get() * tierMultiplier;
-            armorAttr.setBaseValue(scaledArmor);
-        }
+        processAndAddModifier(entity, Attributes.ARMOR, "realmengine_armor_scaling", CommonConfig.armorMultiplierPerTier.get() * tierMultiplier);
         
         // Scale skill attributes if available
         Attribute primarySkill = TieringRegistry.getPrimarySkillStrengthAttribute();
-        if (primarySkill != null) {
-            var primaryAttr = entity.getAttribute(primarySkill);
-            if (primaryAttr != null) {
-                double primaryMultiplier = CommonConfig.primarySkillMultiplierPerTier.get();
-                double currentPrimary = entity.getAttributeValue(primarySkill);
-                double scaledPrimary = currentPrimary * primaryMultiplier * tierMultiplier;
-                primaryAttr.setBaseValue(scaledPrimary);
-            }
-        }
+        if (primarySkill != null)
+            processAndAddModifier(entity, primarySkill, "realmengine_primary_skill_scaling", CommonConfig.primarySkillMultiplierPerTier.get() * tierMultiplier);
         
         Attribute secondarySkill = TieringRegistry.getSecondarySkillStrengthAttribute();
-        if (secondarySkill != null) {
-            var secondaryAttr = entity.getAttribute(secondarySkill);
-            if (secondaryAttr != null) {
-                double secondaryMultiplier = CommonConfig.secondarySkillMultiplierPerTier.get();
-                double currentSecondary = entity.getAttributeValue(secondarySkill);
-                double scaledSecondary = currentSecondary * secondaryMultiplier * tierMultiplier;
-                secondaryAttr.setBaseValue(scaledSecondary);
-            }
-        }
+        if (secondarySkill != null)
+            processAndAddModifier(entity, secondarySkill, "realmengine_secondary_skill_scaling", CommonConfig.secondarySkillMultiplierPerTier.get() * tierMultiplier);
         tag.putBoolean("realmengine_scaled", true);
+    }
+
+    // ==================== API METHODS ====================
+
+    /**
+     * Helper method to process and add a permanent attribute modifier to an entity.
+     * This method ensures that the attribute exists and calculates the difference between the current value and the desired scaled value.
+     *
+     * @param entity The entity to modify
+     * @param attribute The attribute to modify
+     * @param modifierName The name of the modifier (used for identification)
+     * @param scale The scale for the attribute
+     */
+    public static void processAndAddModifier(LivingEntity entity, Attribute attribute, String modifierName, double scale) {
+        if (attribute == null) return;
+        var attrInstance = entity.getAttribute(attribute);
+        if (attrInstance != null) {
+            double baseValue = attrInstance.getBaseValue();
+            attrInstance.addPermanentModifier(new AttributeModifier(modifierName, (scale * baseValue), AttributeModifier.Operation.ADDITION));
+        }
     }
 }
 
