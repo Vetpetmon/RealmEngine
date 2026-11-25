@@ -37,20 +37,20 @@ public class CommonConfig {
                 .comment("Distance per tier. Default is 250.")
                 .defineInRange("distancePerTier", 250, 1, 1000);
         healthMultiplierPerTier = builder
-                .comment("Health multiplier per tier. Default is 1.25 (25% increase per tier).")
-                .defineInRange("healthMultiplierPerTier", 1.25, 0.0, 10.0);
+                .comment("Health multiplier per tier. Default is 0.25 (25% increase per tier).")
+                .defineInRange("healthMultiplierPerTier", 0.25, 0.0, 10.0);
         armorMultiplierPerTier = builder
-                .comment("Armor multiplier per tier. Default is 1.10 (10% increase per tier).")
-                .defineInRange("armorMultiplierPerTier", 1.10, 0.0, 10.0);
+                .comment("Armor multiplier per tier. Default is 0.10 (10% increase per tier).")
+                .defineInRange("armorMultiplierPerTier", 0.10, 0.0, 10.0);
         attackMultiplierPerTier = builder
-                .comment("Attack multiplier per tier. Default is 1.15 (15% increase per tier).")
-                .defineInRange("attackMultiplierPerTier", 1.15, 0.0, 10.0);
+                .comment("Attack multiplier per tier. Default is 0.15 (15% increase per tier).")
+                .defineInRange("attackMultiplierPerTier", 0.15, 0.0, 10.0);
         primarySkillMultiplierPerTier = builder
                 .comment("Primary skill multiplier per tier. Default is 0.10 (10% increase per tier).")
-                .defineInRange("primarySkillMultiplierPerTier", 1.10, 0.0, 10.0);
+                .defineInRange("primarySkillMultiplierPerTier", 0.10, 0.0, 10.0);
         secondarySkillMultiplierPerTier = builder
                 .comment("Secondary skill multiplier per tier. Default is 0.10 (10% increase per tier).")
-                .defineInRange("secondarySkillMultiplierPerTier", 1.10, 0.0, 10.0);
+                .defineInRange("secondarySkillMultiplierPerTier", 0.10, 0.0, 10.0);
         scalingMode = builder
                 .comment("Scaling mode for tier multipliers. Default is LOGARITHMIC. LOGARITHMIC provides diminishing returns, EXPONENTIAL provides increasing returns, and LINEAR provides consistent scaling.")
                 .defineEnum("scalingMode", ScalingMode.LOGARITHMIC);
